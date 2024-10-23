@@ -1,0 +1,9 @@
+.env
+.env-docker
+.env.local
+.DS_Store
+__pycache__/
+.venv
+*.log
+.vscode
+.ruff_cache

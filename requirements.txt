@@ -1,0 +1,11 @@
+pyyaml
+colorama
+tzlocal
+argparse
+questionary
+python-dotenv
+langchain
+langchain-openai
+langchainhub
+langchain_community
+boto3
