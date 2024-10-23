@@ -17,14 +17,14 @@ def count_tokens(text):
 def call_openai(prompt, model=config.OPENAI_LANGCHAIN_AGENT_MODEL_ID):
     try:
         tokens = count_tokens(prompt)
-        log_message("INFO", f"Calling OpenAI ({tokens} tokens in the prompt)...")
+        log_message("DEBUG", f"Calling OpenAI ({tokens} tokens in the prompt)...")
         response_from_openai = client.chat.completions.create(
             model=model,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
         )
         response = response_from_openai.choices[0].message.content
-        log_message("INFO", f"Response from OpenAI: {response}")
+        log_message("DEBUG", f"Response from OpenAI: {response}")
         return response
 
     except Exception as e:

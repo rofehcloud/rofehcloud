@@ -7,7 +7,13 @@ from colorama import init, Style
 
 from common.logger import log_message
 from common.agent import handle_user_prompt, setup_services
-from common.chat import get_conversation_label
+from common.chat import (
+    get_conversation_label,
+    save_data,
+    load_data,
+    get_conversations_list,
+)
+from common.config import Config as config
 
 
 init(autoreset=True)
@@ -37,11 +43,15 @@ def text_based_interaction(profile: str):
         ).ask()  # Returns the selected choice as a string
 
         if choice == configure_profile:
-            log_message("INFO", "Configuring the profile...")
+            log_message("DEBUG", "Configuring the profile...")
             profile_name = questionary.text("Enter the new profile name:").ask()
-            log_message("INFO", f"New profile name: {profile_name}")
+            log_message("DEBUG", f"New profile name: {profile_name}")
 
-        elif choice == ask_new_question or choice == troubleshoot_problem:
+        elif (
+            choice == continue_conversation
+            or choice == ask_new_question
+            or choice == troubleshoot_problem
+        ):
             troubleshooting = False
             if choice == troubleshoot_problem:
                 troubleshooting = True
@@ -49,6 +59,54 @@ def text_based_interaction(profile: str):
             setup_services(profile)
             first_question = True
             conversation_details = {}
+            session_id = None
+
+            if choice == continue_conversation:
+                conversations_list = get_conversations_list(profile)
+                if not conversations_list:
+                    print("No conversations found.")
+                    continue
+                formatted_conversations_list = []
+                for conversation in conversations_list:
+                    formatted_conversations_list.append(
+                        f"{conversation['label']} (started on {conversation['date']}, "
+                        f"session ID {conversation['session_id']})"
+                    )
+
+                conversation_to_continue = questionary.select(
+                    "Select a conversation to continue:",
+                    use_shortcuts=True,
+                    choices=formatted_conversations_list,
+                ).ask()
+
+                if conversation_to_continue is None:
+                    print("Returning to the main menu...")
+                    continue
+
+                session_id = conversation_to_continue.split("session ID ")[1].strip(")")
+                log_message("DEBUG", f"Session ID: {session_id}")
+
+                session_file_name = f"{config.SESSION_DIR}/{session_id}.yaml"
+                conversation_details = load_data(session_file_name)
+                if not conversation_details:
+                    print("Error while loading the conversation details.")
+                    continue
+
+                for chat_entry in conversation_details["conversation_history"]:
+                    print(
+                        Style.BRIGHT
+                        + "Question: "
+                        + Style.RESET_ALL
+                        + chat_entry["question"]
+                    )
+                    print(
+                        Style.BRIGHT
+                        + "Answer: "
+                        + Style.RESET_ALL
+                        + chat_entry["answer"]
+                    )
+
+                first_question = False
 
             while True:
                 if first_question:
@@ -66,19 +124,23 @@ def text_based_interaction(profile: str):
 
                 if first_question:
                     first_question = False
-                    conversation_name = get_conversation_label(profile, question)
+                    conversation_label = get_conversation_label(profile, question)
                     session_id = str(uuid.uuid4())
                     conversation_details = {
                         "start_time": datetime.now(),
+                        "profile": profile,
                         "session_id": session_id,
-                        "conversation_name": conversation_name,
+                        "conversation_label": conversation_label,
+                        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "conversation_type": "troubleshooting"
                         if troubleshooting
                         else "question",
                         "conversation_history": [],
                     }
 
-                if troubleshooting:
+                session_file_name = f"{config.SESSION_DIR}/{session_id}.yaml"
+
+                if troubleshooting and troubleshooting:
                     local_tz = tzlocal.get_localzone()
                     current_time = datetime.now(local_tz)
                     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -105,7 +167,15 @@ def text_based_interaction(profile: str):
                 conversation_details["conversation_history"].append(
                     {"question": question, "answer": answer}
                 )
-                log_message("INFO", f"Conversation details: {conversation_details}")
+
+                result = save_data(session_file_name, conversation_details)
+                if not result:
+                    print(
+                        f"Error while saving the conversation details to file {session_file_name}."
+                    )
+                    break
+
+                log_message("DEBUG", f"Conversation details: {conversation_details}")
 
         else:
             print("Exiting...")
@@ -132,15 +202,15 @@ def main():
     profile = "default"
 
     if args.profile:
-        log_message("INFO", f"Using profile: {args.profile}")
+        log_message("DEBUG", f"Using profile: {args.profile}")
         profile = args.profile
-    log_message("INFO", f"Using profile: {profile}")
+    print(Style.BRIGHT + "Profile: " + Style.RESET_ALL + profile)
 
     mode = "interactive"
     if args.mode == "interactive":
         mode = "interactive"
 
-    log_message("INFO", f"Running in {mode} mode")
+    log_message("DEBUG", f"Running in {mode} mode")
     text_based_interaction(profile)
 
 

@@ -22,7 +22,7 @@ import subprocess
 from common.config import Config as config
 from common.logger import log_message
 
-# from common.utils import generate_collection_name
+from common.utils import fix_unclosed_quote
 from common.constants import error_response, agent_prompt_with_history
 
 
@@ -54,6 +54,7 @@ prompt_with_chat_history.template = agent_prompt_with_history
 
 
 def api_command_executor(command):
+    command = fix_unclosed_quote(command)
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     return result.stdout + "\n" + result.stderr
 
@@ -69,7 +70,7 @@ def setup_services(profile: str):
     global agent_with_chat_history
     try:
         log_message(
-            "INFO",
+            "DEBUG",
             "Initializing the client configuration...",
         )
         start_time = time.time()
@@ -105,7 +106,7 @@ def setup_services(profile: str):
         """
 
         if True:
-            log_message("INFO", "Adding API tool...")
+            log_message("DEBUG", "Adding API tool...")
 
             cli_tool_description = (
                 "Run a shell command on this machine. "
@@ -136,12 +137,12 @@ def setup_services(profile: str):
             )
 
         log_message(
-            "INFO",
+            "DEBUG",
             f"Finished setting up tools, "
             f"number of registered tools: {len(tools)}...",
         )
 
-        log_message("INFO", "Initializing the LangChain agent...")
+        log_message("DEBUG", "Initializing the LangChain agent...")
 
         agents_with_history = create_react_agent(
             # llm_bedrock_langchain,
@@ -174,7 +175,7 @@ def setup_services(profile: str):
         end_time = time.time()
         elapsed_time = end_time - start_time
         log_message(
-            "INFO",
+            "DEBUG",
             f"Client initialization was successful (elapsed time: {str(elapsed_time)} seconds)",
         )
 
@@ -192,7 +193,7 @@ def agent_chat(user_input, conversation_history):
 
         agent_response = full_agent_response["output"]
         log_message(
-            "INFO",
+            "DEBUG",
             "Received response from the LangChain agent: " + agent_response,
         )
         return str(agent_response)
@@ -209,7 +210,7 @@ def handle_user_prompt(profile, user_input, conversation_history=[]):
 
         final_response_time = time.time()
         seconds_lapsed = final_response_time - start_time
-        log_message("INFO", "Time elapsed: %s seconds" % seconds_lapsed)
+        log_message("DEBUG", "Time elapsed: %s seconds" % seconds_lapsed)
 
         return bot_response
 

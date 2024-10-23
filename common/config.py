@@ -13,6 +13,9 @@ class Config:
     SIMILARITY_TOP_K = int(os.environ.get("SIMILARITY_TOP_K", 15))
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
+    PROFILE_DIR = os.path.expanduser(os.environ.get("PROFILE_DIR", "~/.rofehcloud"))
+    SESSION_DIR = f"{PROFILE_DIR}/sessions"
+
     OPENAI_LANGCHAIN_AGENT_MODEL_ID = os.environ.get(
         "OPENAI_LANGCHAIN_AGENT_MODEL_ID",
         # "gpt-4o-mini-2024-07-18"
