@@ -15,6 +15,8 @@ class Config:
 
     PROFILE_DIR = os.path.expanduser(os.environ.get("PROFILE_DIR", "~/.rofehcloud"))
     SESSION_DIR = f"{PROFILE_DIR}/sessions"
+    PROFILES_FILE = f"{PROFILE_DIR}/profiles.yaml"
+
 
     OPENAI_LANGCHAIN_AGENT_MODEL_ID = os.environ.get(
         "OPENAI_LANGCHAIN_AGENT_MODEL_ID",

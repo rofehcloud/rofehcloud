@@ -14,6 +14,8 @@ from common.chat import (
     get_conversations_list,
 )
 from common.config import Config as config
+from common.profile import get_profiles
+from common.utils import initialize_environment
 
 
 init(autoreset=True)
@@ -26,11 +28,11 @@ select_profile = "Select a different profile"
 configure_profile = "Configure the profile"
 exit_item = "Exit"
 
-
 def text_based_interaction(profile: str):
+    
     while True:
         choice = questionary.select(
-            "Choose an option:",
+            "Choose an option (or use Ctrl+C to exit):",
             use_shortcuts=True,
             choices=[
                 continue_conversation,
@@ -46,6 +48,28 @@ def text_based_interaction(profile: str):
             log_message("DEBUG", "Configuring the profile...")
             profile_name = questionary.text("Enter the new profile name:").ask()
             log_message("DEBUG", f"New profile name: {profile_name}")
+
+        elif choice == select_profile:
+            profiles = get_profiles()
+            if not profiles:
+                print("No profiles found.")
+                continue
+
+            formatted_profiles = []
+            for profile in profiles:
+                formatted_profiles.append(f"{profile['name']} ({profile['description']})")
+
+            profile_name = questionary.select(
+                "Select a profile (press Ctrl+C to exit the menu):",
+                use_shortcuts=True,
+                choices=formatted_profiles,
+            ).ask()
+
+            if profile_name is None:
+                print("Returning to the main menu...")
+                continue
+            
+            profile = profile_name
 
         elif (
             choice == continue_conversation
@@ -74,7 +98,7 @@ def text_based_interaction(profile: str):
                     )
 
                 conversation_to_continue = questionary.select(
-                    "Select a conversation to continue:",
+                    "Select a conversation to continue (press Ctrl+C to exit the menu):",
                     use_shortcuts=True,
                     choices=formatted_conversations_list,
                 ).ask()
@@ -91,7 +115,10 @@ def text_based_interaction(profile: str):
                 if not conversation_details:
                     print("Error while loading the conversation details.")
                     continue
-
+                print(
+                        Style.BRIGHT
+                        + "\nConversation history: \n"
+                    )
                 for chat_entry in conversation_details["conversation_history"]:
                     print(
                         Style.BRIGHT
@@ -183,6 +210,10 @@ def text_based_interaction(profile: str):
 
 
 def main():
+    result = initialize_environment()
+    if not result:
+        exit(1)
+
     parser = argparse.ArgumentParser(description="CLI Application Options")
     parser.add_argument(
         "--mode",

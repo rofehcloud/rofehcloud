@@ -1,5 +1,5 @@
 run:
-	PYTHONPATH="./:../common/" python3 main.py
+	python3 rofehcloud.py
 
 venv:
 	python3 -m venv .venv
