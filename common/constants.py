@@ -34,3 +34,10 @@ Previous conversation history (from least recent to most recent):
 New input: {input}
 Thought: {agent_scratchpad}
 """
+
+
+data_modification_command_denied = (
+    "SYSTEM ERROR: The proposed command is potentially risky and cannot be executed. "
+    "Please suggest a different command that will not try to make any changes in the system. "
+    "If an alternative command is not possible, please return an error message and stop sequence."
+)

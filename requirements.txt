@@ -8,4 +8,5 @@ langchain
 langchain-openai
 langchainhub
 langchain_community
+langchain-aws
 boto3

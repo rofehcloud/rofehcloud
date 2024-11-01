@@ -28,8 +28,8 @@ select_profile = "Select a different profile"
 configure_profile = "Configure the profile"
 exit_item = "Exit"
 
+
 def text_based_interaction(profile: str):
-    
     while True:
         choice = questionary.select(
             "Choose an option (or use Ctrl+C to exit):",
@@ -57,7 +57,9 @@ def text_based_interaction(profile: str):
 
             formatted_profiles = []
             for profile in profiles:
-                formatted_profiles.append(f"{profile['name']} ({profile['description']})")
+                formatted_profiles.append(
+                    f"{profile['name']} ({profile['description']})"
+                )
 
             profile_name = questionary.select(
                 "Select a profile (press Ctrl+C to exit the menu):",
@@ -68,7 +70,7 @@ def text_based_interaction(profile: str):
             if profile_name is None:
                 print("Returning to the main menu...")
                 continue
-            
+
             profile = profile_name
 
         elif (
@@ -115,10 +117,7 @@ def text_based_interaction(profile: str):
                 if not conversation_details:
                     print("Error while loading the conversation details.")
                     continue
-                print(
-                        Style.BRIGHT
-                        + "\nConversation history: \n"
-                    )
+                print(Style.BRIGHT + "\nConversation history: \n")
                 for chat_entry in conversation_details["conversation_history"]:
                     print(
                         Style.BRIGHT
@@ -152,6 +151,13 @@ def text_based_interaction(profile: str):
                 if first_question:
                     first_question = False
                     conversation_label = get_conversation_label(profile, question)
+                    print(
+                        Style.BRIGHT
+                        + "New conversation label: "
+                        + Style.RESET_ALL
+                        + conversation_label
+                    )
+
                     session_id = str(uuid.uuid4())
                     conversation_details = {
                         "start_time": datetime.now(),

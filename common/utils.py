@@ -4,6 +4,7 @@ from common.logger import log_message
 from common.config import Config as config
 from common.chat import save_data
 
+
 def generate_collection_name(profile: str) -> str:
     collection_name = f"c_{profile}"
     return collection_name
@@ -30,14 +31,14 @@ def initialize_environment():
 
         if not os.path.exists(config.SESSION_DIR):
             os.makedirs(config.SESSION_DIR)
-        
+
         if not os.path.exists(config.PROFILES_FILE):
-            profiles = [ {"name": "default", "description": "Default profile"} ]
+            profiles = [{"name": "default", "description": "Default profile"}]
             result = save_data(config.PROFILES_FILE, profiles)
             if not result:
                 log_message("ERROR", "Failed to save the default profile")
                 return False
-            
+
         return True
 
     except Exception as e:

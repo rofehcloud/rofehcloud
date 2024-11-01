@@ -1,32 +1,55 @@
+# from llama_index.llms.bedrock import Bedrock as BedrockLlamaIndex
+
+# from botocore.config import Config
+
+# from botocore.exceptions import ClientError
+
+# import boto3
+import openai
+import platform
+
+# import json
+import time
+import subprocess
+import questionary
+from colorama import init, Style
+
 from langchain import hub
 from langchain_community.tools import Tool
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
+
+# from langchain_community.llms import Bedrock
+from langchain_aws import ChatBedrock
 from langchain_openai import ChatOpenAI as OpenAILangChain
 
-
-# from llama_index.llms.bedrock import Bedrock as BedrockLlamaIndex
-
-# from botocore.config import Config
-# from botocore.exceptions import ClientError
-
-# import boto3
-import openai
-
-# import json
-import time
-import subprocess
 
 from common.config import Config as config
 from common.logger import log_message
 
 from common.utils import fix_unclosed_quote
-from common.constants import error_response, agent_prompt_with_history
+from common.constants import (
+    error_response,
+    agent_prompt_with_history,
+    data_modification_command_denied,
+)
+from common.llm import call_llm
 
+init(autoreset=True)
 
 chat_history_store = {}
+
+client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
+openai.api_key = config.OPENAI_API_KEY
+
+# llm_llamaindex = OpenAILlamaIndex(temperature=0, api_key=config.openai_api_key)
+# llm_llamaindex = BedrockLlamaIndex(model=config.BEDROCK_VECTORDB_RESPONSE_MODEL_ID)
+
+prompt_with_chat_history = hub.pull("hwchase17/react-chat")
+
+prompt_with_chat_history.template = agent_prompt_with_history
 
 
 def get_session_history(conversation_history) -> BaseChatMessageHistory:
@@ -42,21 +65,85 @@ def get_session_history(conversation_history) -> BaseChatMessageHistory:
     return result
 
 
-client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
-openai.api_key = config.OPENAI_API_KEY
+def check_that_command_is_safe(command):
+    prompt = (
+        "Review the following command and reply with Yes if the command is making any "
+        "changes to the system. Reply with No if the command is not making any changes and is safe to"
+        f"execute. Do not add any comments. Command to review: \n\n{command}"
+    )
+    response = call_llm(prompt, config.LLM_TO_USE)
 
-# llm_llamaindex = OpenAILlamaIndex(temperature=0, api_key=config.openai_api_key)
-# llm_llamaindex = BedrockLlamaIndex(model=config.BEDROCK_VECTORDB_RESPONSE_MODEL_ID)
+    if response is None or response == "":
+        log_message(
+            "ERROR", "Failed to validate that the command is not making any changes"
+        )
+        return (
+            False,
+            "ERROR: Failed to validate that the command is not making any changes",
+        )
 
-prompt_with_chat_history = hub.pull("hwchase17/react-chat")
+    if response.lower() == "yes":
+        return False, "ERROR: The command is making changes to the system"
 
-prompt_with_chat_history.template = agent_prompt_with_history
+    if response.lower() == "no":
+        return True, "The command is not making any changes to the system"
+
+    return (
+        False,
+        f"ERROR: Failed to validate that the command is not making any changes (received response: {response})",
+    )
 
 
 def api_command_executor(command):
     command = fix_unclosed_quote(command)
+
+    if config.ALLOW_POTENTIALLY_RISKY_LLM_COMMANDS in ["ask", "no"]:
+        safe_command, safe_command_message = check_that_command_is_safe(command)
+        if not safe_command:
+            if config.ALLOW_POTENTIALLY_RISKY_LLM_COMMANDS == "ask":
+                print(
+                    Style.BRIGHT
+                    + "Attention! The system would like to execute a command that may change some data.\n"
+                    "The command that is planned to be executed:\n"
+                    + Style.RESET_ALL
+                    + command
+                )
+                print("\n\n")
+                response = questionary.confirm(
+                    "Would you like the command to be executed?"
+                ).ask()
+                if not response:
+                    return data_modification_command_denied
+
+            else:
+                return data_modification_command_denied
+
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
-    return result.stdout + "\n" + result.stderr
+    stdout = result.stdout
+    stderr = result.stderr
+    error_code = result.returncode
+    if len(stdout) == 0 and len(stderr) == 0:
+        return f"Empty Response (command exit code: {error_code})"
+
+    output = stdout + stderr
+
+    if len(output) > config.COMMAND_OUTPUT_MAX_LENGTH_CHARS:
+        log_message(
+            "DEBUG",
+            f"Output is too long: {len(output)} characters; "
+            f"truncating to {config.COMMAND_OUTPUT_MAX_LENGTH_CHARS} characters",
+        )
+        output = output[: config.COMMAND_OUTPUT_MAX_LENGTH_CHARS] + "\n... (truncated)"
+    else:
+        log_message("DEBUG", f"Output length: {len(output)} characters")
+
+    return output
+
+
+def return_current_date_time(string):
+    return (
+        f'Current UTC date/time is {time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())}'
+    )
 
 
 def before_generating_the_final_answer(prompt: str) -> str:
@@ -68,6 +155,7 @@ agent_with_chat_history = None
 
 def setup_services(profile: str):
     global agent_with_chat_history
+
     try:
         log_message(
             "DEBUG",
@@ -78,7 +166,7 @@ def setup_services(profile: str):
 
         # collection_name_prefix = generate_collection_name(profile)
 
-        llm_langchain = OpenAILangChain(
+        llm_openai_langchain = OpenAILangChain(
             temperature=config.LANGCHAIN_AGENT_MODEL_TEMPERATURE,
             model=config.OPENAI_LANGCHAIN_AGENT_MODEL_ID,
             openai_api_key=config.OPENAI_API_KEY,
@@ -87,7 +175,38 @@ def setup_services(profile: str):
             streaming=False,
         )
 
+        # boto3_config = Config(read_timeout=300)
+        # session = boto3.Session(profile_name='bedrock', region_name='us-east-1')
+        # bedrock_client = boto3.client(service_name="bedrock-runtime")
+
+        llm_bedrock_langchain = ChatBedrock(
+            # client=bedrock_client,
+            credentials_profile_name="bedrock",
+            region_name="us-east-1",
+            model_id=config.BEDROCK_LANGCHAIN_AGENT_MODEL_ID,
+            # model_kwargs={"temperature": 0, "max_tokens": 4096},
+        )
+
+        if config.LLM_TO_USE == "openai":
+            llm_langchain = llm_openai_langchain
+        elif config.LLM_TO_USE == "bedrock":
+            llm_langchain = llm_bedrock_langchain
+        else:
+            raise ValueError(f"LLM {config.LLM_TO_USE} is not supported.")
+
         tools = []
+
+        tools.extend(
+            [
+                Tool.from_function(
+                    func=return_current_date_time,
+                    name="Get current date/time",
+                    description=(
+                        "Call the tool if you need to get the current date and time in UTC."
+                    ),
+                ),
+            ]
+        )
 
         """
         tools.extend(
@@ -109,7 +228,8 @@ def setup_services(profile: str):
             log_message("DEBUG", "Adding API tool...")
 
             cli_tool_description = (
-                "Run a shell command on this machine. "
+                f"Run a shell command on this machine (OS {platform.system()} {platform.version()}). "
+                "macOS/Darwin does not support -d flag for 'date' command. "
                 "Can be used to get the current state of AWS "
                 "resources using 'aws' commands. Can run 'dig' "
                 "command to check DNS records, or 'ping' command to check network "
@@ -122,7 +242,7 @@ def setup_services(profile: str):
                 "AWS CloudWatch metrics, pull the data for no more the past 7 days. "
                 "In general, try to limit the "
                 "amount of data returned by the shell command to no more than 100 lines. "
-                "If the tool returns 'Empty Response' string then do not use it again "
+                "If the tool returns 'Empty Response' or '[]' string then do not use it again "
                 "for the same query. "
                 "If a command returns an error, then analyze the error message "
                 "and try to fix the command."
@@ -145,8 +265,6 @@ def setup_services(profile: str):
         log_message("DEBUG", "Initializing the LangChain agent...")
 
         agents_with_history = create_react_agent(
-            # llm_bedrock_langchain,
-            # llm_anthropic_langchain,
             llm_langchain,
             tools,
             # langchain_prompt,

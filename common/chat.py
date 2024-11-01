@@ -1,16 +1,17 @@
 import os
 import yaml
 
-from common.llm import call_openai
+from common.llm import call_llm
 from common.logger import log_message
 from common.config import Config as config
 
 
 def get_conversation_label(profile, user_input):
-    convo_label = call_openai(
+    convo_label = call_llm(
         f"For the provided below user prompt, suggest a short (20-30 characters) description "
         "of the conversation. Do not add any comments - just reply with the "
-        f"description string.\n\n{user_input}"
+        f"description string.\n\n{user_input}",
+        config.LLM_TO_USE,
     )
 
     if convo_label is None or convo_label == "":
@@ -34,6 +35,11 @@ def get_conversations_list(profile):
                     "date": session["date"],
                 }
                 conversations_list.append(conversation)
+
+        # sort conversations by date
+        conversations_list = sorted(
+            conversations_list, key=lambda x: x["date"], reverse=True
+        )
 
         # log_message("INFO", f"Conversations list: {conversations_list}")
         return conversations_list

@@ -1,8 +1,5 @@
-
-
-
 from common.config import Config as config
-from common.chat import load_data, save_data
+from common.chat import load_data
 
 
 def get_profiles():

@@ -17,15 +17,25 @@ class Config:
     SESSION_DIR = f"{PROFILE_DIR}/sessions"
     PROFILES_FILE = f"{PROFILE_DIR}/profiles.yaml"
 
-
     OPENAI_LANGCHAIN_AGENT_MODEL_ID = os.environ.get(
         "OPENAI_LANGCHAIN_AGENT_MODEL_ID",
         # "gpt-4o-mini-2024-07-18"
         # "gpt-4-turbo-2024-04-09"
+        "gpt-4o"
+        # "gpt-4o-mini"
+        # "gpt-4-1106-preview",
+        # "gpt-4o-2024-05-13"
+    )
+    OPENAI_GENERAL_MODEL_ID = os.environ.get(
+        "OPENAI_GENERAL_MODEL_ID",
+        # "gpt-4o-mini-2024-07-18"
+        # "gpt-4-turbo-2024-04-09"
+        # "gpt-4o"
         "gpt-4o-mini"
         # "gpt-4-1106-preview",
         # "gpt-4o-2024-05-13"
     )
+
     LANGCHAIN_AGENT_MODEL_TEMPERATURE = float(
         os.environ.get("LANGCHAIN_AGENT_MODEL_TEMPERATURE", 0.3)
     )
@@ -33,12 +43,32 @@ class Config:
 
     BEDROCK_LANGCHAIN_AGENT_MODEL_ID = os.environ.get(
         "BEDROCK_LANGCHAIN_AGENT_MODEL_ID",
+        "anthropic.claude-3-haiku-20240307-v1:0"
         # "anthropic.claude-3-haiku-20240307-v1:0"
-        "anthropic.claude-3-sonnet-20240229-v1:0",
+        # "anthropic.claude-3-sonnet-20240229-v1:0",
         # "anthropic.claude-3-opus-20240229-v1:0",
     )
 
-    AGENT_MAX_ITERATIONS = int(os.environ.get("AGENT_MAX_ITERATIONS", 20))
+    BEDROCK_GENERAL_MODEL_ID = os.environ.get(
+        "BEDROCK_GENERAL_MODEL_ID",
+        "anthropic.claude-3-haiku-20240307-v1:0"
+        # "anthropic.claude-3-haiku-20240307-v1:0"
+        # "anthropic.claude-3-sonnet-20240229-v1:0",
+        # "anthropic.claude-3-opus-20240229-v1:0",
+    )
+    BEDROCK_PROFILE_NAME = os.environ.get("BEDROCK_PROFILE_NAME", "bedrock")
+    BEDROCK_AWS_REGION = os.environ.get("BEDROCK_AWS_REGION", "us-east-1")
+
+    AGENT_MAX_ITERATIONS = int(os.environ.get("AGENT_MAX_ITERATIONS", 30))
+    COMMAND_OUTPUT_MAX_LENGTH_CHARS = int(
+        os.environ.get("COMMAND_OUTPUT_MAX_LENGTH_CHARS", 10000)
+    )
+
+    LLM_TO_USE = os.environ.get("LLM_TO_USE", "openai")
+
+    ALLOW_POTENTIALLY_RISKY_LLM_COMMANDS = os.environ.get(
+        "ALLOW_POTENTIALLY_RISKY_LLM_COMMANDS", "ask"
+    ).lower()
 
 
 def load_config():
