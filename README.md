@@ -9,6 +9,7 @@ Welcome to the RofehCloud project! This README will guide you through the setup 
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
+- [Authors](#authors)
 - [License](#license)
 
 ## Introduction
@@ -62,8 +63,14 @@ We welcome contributions to the RofehCloud project! If you would like to contrib
 3. Commit your changes and push them to your fork.
 4. Submit a pull request with a detailed description of your changes.
 
+## Authors
+
+The project was initially created by:
+- **Victor Gartvich** - original developer
+- **Andre Buryndin** - code reviews and contributions
+
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE.txt) file for more details.
+This project is licensed under the Mozilla Public License, version 2.0. See the [LICENSE.txt](LICENSE.txt) file for more details.
 
 Thank you for using RofehCloud!
