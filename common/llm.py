@@ -5,18 +5,19 @@ import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
-# Shared libraries
 from common.config import Config as config
 from common.logger import log_message
 
-client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
+if config.LLM_TO_USE == "openai":
+    client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
 
 
-boto3_config = Config(read_timeout=300)
-session = boto3.Session(
-    profile_name=config.BEDROCK_PROFILE_NAME, region_name=config.BEDROCK_AWS_REGION
-)
-bedrock_client = session.client(service_name="bedrock-runtime")
+if config.LLM_TO_USE == "bedrock":
+    boto3_config = Config(read_timeout=300)
+    session = boto3.Session(
+        profile_name=config.BEDROCK_PROFILE_NAME, region_name=config.BEDROCK_AWS_REGION
+    )
+    bedrock_client = session.client(service_name="bedrock-runtime")
 
 
 def count_tokens(text):
@@ -78,12 +79,12 @@ def call_bedrock_llm(prompt, model_id):
         output_tokens = result["usage"]["output_tokens"]
         output_list = result.get("content", [])
 
-        log_message("INFO", "Bedrock Invocation details:")
-        log_message("INFO", f"The input length is {input_tokens} tokens.")
-        log_message("INFO", f"The output length is {output_tokens} tokens.")
+        log_message("DEBUG", "Bedrock Invocation details:")
+        log_message("DEBUG", f"The input length is {input_tokens} tokens.")
+        log_message("DEBUG", f"The output length is {output_tokens} tokens.")
 
         log_message(
-            "INFO",
+            "DEBUG",
             f"The model returned {len(output_list)} response(s):",
         )
         for output in output_list:
@@ -98,3 +99,22 @@ def call_bedrock_llm(prompt, model_id):
             + f'{err.response["Error"]["Code"]}: {err.response["Error"]["Message"]}',
         )
         return None
+
+
+def verify_llm_functionality():
+    if config.SKIP_LLM_FUNCTIONALITY_VERIFICATION:
+        log_message("INFO", "Skipping LLM functionality verification.")
+        return True
+    log_message("DEBUG", f"Verifying LLM functionality ({config.LLM_TO_USE})...")
+    if config.LLM_TO_USE == "openai":
+        response = call_openai("Hello, world!", config.OPENAI_GENERAL_MODEL_ID)
+    elif config.LLM_TO_USE == "bedrock":
+        response = call_bedrock_llm("Hello, world!", config.BEDROCK_GENERAL_MODEL_ID)
+    else:
+        raise Exception(f"LLM {config.LLM_TO_USE} not supported.")
+
+    if isinstance(response, str) and len(response) > 0:
+        log_message("DEBUG", "LLM functionality verified.")
+        return True
+    else:
+        raise Exception("LLM functionality verification failed.")

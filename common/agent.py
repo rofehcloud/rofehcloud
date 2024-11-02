@@ -1,14 +1,6 @@
-# from llama_index.llms.bedrock import Bedrock as BedrockLlamaIndex
-
-# from botocore.config import Config
-
-# from botocore.exceptions import ClientError
-
-# import boto3
 import openai
 import platform
 
-# import json
 import time
 import subprocess
 import questionary
@@ -21,7 +13,6 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 
-# from langchain_community.llms import Bedrock
 from langchain_aws import ChatBedrock
 from langchain_openai import ChatOpenAI as OpenAILangChain
 
@@ -41,12 +32,6 @@ init(autoreset=True)
 
 chat_history_store = {}
 
-client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
-openai.api_key = config.OPENAI_API_KEY
-
-# llm_llamaindex = OpenAILlamaIndex(temperature=0, api_key=config.openai_api_key)
-# llm_llamaindex = BedrockLlamaIndex(model=config.BEDROCK_VECTORDB_RESPONSE_MODEL_ID)
-
 prompt_with_chat_history = hub.pull("hwchase17/react-chat")
 
 prompt_with_chat_history.template = agent_prompt_with_history
@@ -54,14 +39,12 @@ prompt_with_chat_history.template = agent_prompt_with_history
 
 def get_session_history(conversation_history) -> BaseChatMessageHistory:
     chat_history_store = ChatMessageHistory()
-    # log_message("INFO", f"Retrieved {len(conversation_history)} chat entries")
-    # log_message("INFO", f"Chat history: {conversation_history}")
     for chat_entry in conversation_history:
         chat_history_store.add_user_message(chat_entry["question"])
         chat_history_store.add_ai_message(chat_entry["answer"])
 
     result = chat_history_store
-    # log_message("INFO", f"Chat history: {result}")
+    log_message("DEBUG", f"Chat history records: {result}")
     return result
 
 
@@ -164,37 +147,40 @@ def setup_services(profile: str):
         start_time = time.time()
         tools = {}
 
-        # collection_name_prefix = generate_collection_name(profile)
-
-        llm_openai_langchain = OpenAILangChain(
-            temperature=config.LANGCHAIN_AGENT_MODEL_TEMPERATURE,
-            model=config.OPENAI_LANGCHAIN_AGENT_MODEL_ID,
-            openai_api_key=config.OPENAI_API_KEY,
-            request_timeout=240,
-            max_tokens=4096,
-            streaming=False,
-        )
-
-        # boto3_config = Config(read_timeout=300)
-        # session = boto3.Session(profile_name='bedrock', region_name='us-east-1')
-        # bedrock_client = boto3.client(service_name="bedrock-runtime")
-
-        llm_bedrock_langchain = ChatBedrock(
-            # client=bedrock_client,
-            credentials_profile_name="bedrock",
-            region_name="us-east-1",
-            model_id=config.BEDROCK_LANGCHAIN_AGENT_MODEL_ID,
-            # model_kwargs={"temperature": 0, "max_tokens": 4096},
-        )
-
         if config.LLM_TO_USE == "openai":
-            llm_langchain = llm_openai_langchain
+            print(
+                f"Using OpenAI LLM, model ID for the agent: {config.OPENAI_LANGCHAIN_AGENT_MODEL_ID}"
+                f" with temperature: {config.LANGCHAIN_AGENT_MODEL_TEMPERATURE}; "
+                f"model ID for general calls: {config.OPENAI_GENERAL_MODEL_ID}"
+            )
+            openai.api_key = config.OPENAI_API_KEY
+            llm_langchain = OpenAILangChain(
+                temperature=config.LANGCHAIN_AGENT_MODEL_TEMPERATURE,
+                model=config.OPENAI_LANGCHAIN_AGENT_MODEL_ID,
+                openai_api_key=config.OPENAI_API_KEY,
+                request_timeout=240,
+                max_tokens=4096,
+                streaming=False,
+            )
         elif config.LLM_TO_USE == "bedrock":
-            llm_langchain = llm_bedrock_langchain
+            print(
+                f"Using Bedrock LLM, model ID for the agent: {config.BEDROCK_LANGCHAIN_AGENT_MODEL_ID}"
+                f" with profile name: {config.BEDROCK_PROFILE_NAME} in region: {config.BEDROCK_AWS_REGION}, "
+                f"model ID for general calls: {config.BEDROCK_GENERAL_MODEL_ID}"
+            )
+
+            llm_langchain = ChatBedrock(
+                credentials_profile_name=config.BEDROCK_PROFILE_NAME,
+                region_name=config.BEDROCK_AWS_REGION,
+                model_id=config.BEDROCK_LANGCHAIN_AGENT_MODEL_ID,
+                model_kwargs={"temperature": 0, "max_tokens": 4096},
+            )
+
         else:
             raise ValueError(f"LLM {config.LLM_TO_USE} is not supported.")
 
         tools = []
+        tool_names = []
 
         tools.extend(
             [
@@ -208,53 +194,80 @@ def setup_services(profile: str):
             ]
         )
 
-        """
-        tools.extend(
-            [
-                Tool.from_function(
-                    func=before_generating_the_final_answer,
-                    name="Before final answer",
-                    description=(
-                        "Call the tool right before generating the final answer to the original user "
-                        "question. Specify 'N/A' as the action input for the tool. Ignore the "
-                        "output of the tool."
-                    ),
-                ),
-            ]
+        cli_tool_description = (
+            f"Run a shell command on this machine (OS {platform.system()} {platform.version()}). "
+            "macOS/Darwin does not support -d flag for 'date' command. "
         )
-        """
 
-        if True:
-            log_message("DEBUG", "Adding API tool...")
+        if "aws" in config.ALL_TOOLS:
+            log_message("DEBUG", "Adding AWS CLI tool...")
+            tool_names.append("aws")
 
-            cli_tool_description = (
-                f"Run a shell command on this machine (OS {platform.system()} {platform.version()}). "
-                "macOS/Darwin does not support -d flag for 'date' command. "
+            cli_tool_description += (
                 "Can be used to get the current state of AWS "
-                "resources using 'aws' commands. Can run 'dig' "
-                "command to check DNS records, or 'ping' command to check network "
-                "connectivity. "
-                "Other supported commands are cat, find, awk, sed, xargs, cut, sort, uniq, wc, "
-                "tail, head, grep and egrep. The tool does not support kubectl or helm commands. "
-                "The shell accepts one argument - the command to run "
-                "(no comments, no redirects). "
+                "resources using 'aws' commands. "
                 "When requesting "
                 "AWS CloudWatch metrics, pull the data for no more the past 7 days. "
-                "In general, try to limit the "
-                "amount of data returned by the shell command to no more than 100 lines. "
-                "If the tool returns 'Empty Response' or '[]' string then do not use it again "
-                "for the same query. "
-                "If a command returns an error, then analyze the error message "
-                "and try to fix the command."
             )
 
-            tools.append(
-                Tool.from_function(
-                    func=api_command_executor,
-                    name="Run a shell command or access AWS/GCP CLI tools",
-                    description=cli_tool_description,
-                ),
+        if "gcloud" in config.ALL_TOOLS:
+            log_message("DEBUG", "Adding gcloud CLI tool...")
+            tool_names.append("gcloud")
+
+            cli_tool_description += (
+                "Can be used to get the current state of Google Cloud (GCP) "
+                "resources using 'gcloud' commands. "
             )
+
+        if "kubectl" in config.ALL_TOOLS:
+            log_message("DEBUG", "Adding kubectl CLI tool...")
+            tool_names.append("kubectl")
+
+            cli_tool_description += (
+                "Can be used to get the current state of Kubernetes "
+                "resources using 'kubectl' commands. "
+                "When requesting K8s resources, pull the data for no more the past 7 days. "
+            )
+
+        if "az" in config.ALL_TOOLS:
+            log_message("DEBUG", "Adding Azure az CLI tool...")
+            tool_names.append("az")
+
+            cli_tool_description += (
+                "Can be used to get the current state of Azure "
+                "resources using 'az' commands. "
+            )
+
+        if len(tool_names) == 0:
+            raise ValueError("No public cloud or K8s tools are available to work with.")
+
+        cli_tool_description += (
+            f"Other supported commands are {config.ALL_TOOLS}. "
+            "The tool accepts one argument - the command to run "
+            "(no comments, no redirects). "
+            "In general, try to limit the "
+            "amount of data returned by the shell command to no more than 100 lines. "
+            "If the tool returns 'Empty Response' or '[]' string then do not use it again "
+            "for the same query. "
+            "If a command returns an error, then analyze the error message "
+            "and try to fix the command."
+        )
+
+        tools.append(
+            Tool.from_function(
+                func=api_command_executor,
+                name="Run a shell command or access CLI tools",
+                description=cli_tool_description,
+            )
+        )
+
+        print(
+            Style.BRIGHT
+            + "Registered langchain tools: "
+            + Style.RESET_ALL
+            + ", ".join(tool_names)
+            + "\n"
+        )
 
         log_message(
             "DEBUG",
@@ -284,8 +297,6 @@ def setup_services(profile: str):
 
         agent_with_chat_history = RunnableWithMessageHistory(
             agent_executors_with_history,
-            # This is needed because in most real world scenarios, a session id is needed
-            # It isn't really used here because we are using a simple in memory ChatMessageHistory
             get_session_history,
             input_messages_key="input",
             history_messages_key="chat_history",

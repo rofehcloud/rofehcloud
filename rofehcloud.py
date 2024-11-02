@@ -14,8 +14,9 @@ from common.chat import (
     get_conversations_list,
 )
 from common.config import Config as config
-from common.profile import get_profiles
+from common.profile import check_available_tools
 from common.utils import initialize_environment
+from common.llm import verify_llm_functionality
 
 
 init(autoreset=True)
@@ -24,12 +25,14 @@ init(autoreset=True)
 continue_conversation = "Continue a previous conversation"
 ask_new_question = "Ask a new question"
 troubleshoot_problem = "Troubleshoot a problem"
-select_profile = "Select a different profile"
-configure_profile = "Configure the profile"
 exit_item = "Exit"
 
 
 def text_based_interaction(profile: str):
+    check_available_tools(profile)
+    setup_services(profile)
+    verify_llm_functionality()
+
     while True:
         choice = questionary.select(
             "Choose an option (or use Ctrl+C to exit):",
@@ -38,42 +41,11 @@ def text_based_interaction(profile: str):
                 continue_conversation,
                 ask_new_question,
                 troubleshoot_problem,
-                select_profile,
-                configure_profile,
                 exit_item,
             ],
         ).ask()  # Returns the selected choice as a string
 
-        if choice == configure_profile:
-            log_message("DEBUG", "Configuring the profile...")
-            profile_name = questionary.text("Enter the new profile name:").ask()
-            log_message("DEBUG", f"New profile name: {profile_name}")
-
-        elif choice == select_profile:
-            profiles = get_profiles()
-            if not profiles:
-                print("No profiles found.")
-                continue
-
-            formatted_profiles = []
-            for profile in profiles:
-                formatted_profiles.append(
-                    f"{profile['name']} ({profile['description']})"
-                )
-
-            profile_name = questionary.select(
-                "Select a profile (press Ctrl+C to exit the menu):",
-                use_shortcuts=True,
-                choices=formatted_profiles,
-            ).ask()
-
-            if profile_name is None:
-                print("Returning to the main menu...")
-                continue
-
-            profile = profile_name
-
-        elif (
+        if (
             choice == continue_conversation
             or choice == ask_new_question
             or choice == troubleshoot_problem
@@ -82,7 +54,6 @@ def text_based_interaction(profile: str):
             if choice == troubleshoot_problem:
                 troubleshooting = True
 
-            setup_services(profile)
             first_question = True
             conversation_details = {}
             session_id = None
@@ -99,10 +70,18 @@ def text_based_interaction(profile: str):
                         f"session ID {conversation['session_id']})"
                     )
 
+                if len(formatted_conversations_list) <= 36:
+                    prompt = "Select a conversation to continue (press Ctrl+C to exit the menu):"
+                else:
+                    prompt = (
+                        "Select a conversation to continue - only last 36 conversations "
+                        "are displayed (press Ctrl+C to exit the menu):"
+                    )
+
                 conversation_to_continue = questionary.select(
-                    "Select a conversation to continue (press Ctrl+C to exit the menu):",
+                    prompt,
                     use_shortcuts=True,
-                    choices=formatted_conversations_list,
+                    choices=formatted_conversations_list[:31],
                 ).ask()
 
                 if conversation_to_continue is None:
