@@ -59,6 +59,13 @@ class Config:
         "ALLOW_POTENTIALLY_RISKY_LLM_COMMANDS", "ask"
     ).lower()
 
+    ASK_FOR_USER_CONFIRMATION_BEFORE_EXECUTING_EACH_COMMAND = (
+        os.environ.get(
+            "ASK_FOR_USER_CONFIRMATION_BEFORE_EXECUTING_EACH_COMMAND", "false"
+        ).lower()
+        == "true"
+    )
+
     STANDARD_TOOLS = os.environ.get(
         "STANDARD_TOOLS",
         (

@@ -80,13 +80,27 @@ def check_that_command_is_safe(command):
 def api_command_executor(command):
     command = fix_unclosed_quote(command)
 
-    if config.ALLOW_POTENTIALLY_RISKY_LLM_COMMANDS in ["ask", "no"]:
+    if config.ASK_FOR_USER_CONFIRMATION_BEFORE_EXECUTING_EACH_COMMAND:
+        print(
+            Style.BRIGHT
+            + "\nThe system would like to execute the following command:\n"
+            + Style.RESET_ALL
+            + command
+        )
+        print("\n\n")
+        response = questionary.confirm(
+            "Would you like the command to be executed?"
+        ).ask()
+        if not response:
+            return data_modification_command_denied
+
+    elif config.ALLOW_POTENTIALLY_RISKY_LLM_COMMANDS in ["ask", "no"]:
         safe_command, safe_command_message = check_that_command_is_safe(command)
         if not safe_command:
             if config.ALLOW_POTENTIALLY_RISKY_LLM_COMMANDS == "ask":
                 print(
                     Style.BRIGHT
-                    + "Attention! The system would like to execute a command that may change some data.\n"
+                    + "\nAttention! The system would like to execute a command that may change some data.\n"
                     "The command that is planned to be executed:\n"
                     + Style.RESET_ALL
                     + command
