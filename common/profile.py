@@ -20,9 +20,9 @@ def check_available_tools(profile):
     for tool in config.ALL_TOOLS:
         # check that the tool is available in the path and executable
         if not shutil.which(tool):
+            log_message("DEBUG", f"Tool {tool} not found in the PATH")
             print(
                 Style.BRIGHT + f'Warning: tool "{tool}" not found in the PATH. '
                 "We highly recommend to install the tool and restart the app."
             )
             config.ALL_TOOLS.remove(tool)
-

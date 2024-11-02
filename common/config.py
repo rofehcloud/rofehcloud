@@ -23,7 +23,7 @@ class Config:
     OPENAI_GENERAL_MODEL_ID = os.environ.get(
         "OPENAI_GENERAL_MODEL_ID",
         # "gpt-4o"
-        "gpt-4o-mini"
+        "gpt-4o-mini",
     )
 
     LANGCHAIN_AGENT_MODEL_TEMPERATURE = float(
@@ -78,9 +78,10 @@ class Config:
     if "" in ALL_TOOLS:
         ALL_TOOLS.remove("")
 
-    SKIP_LLM_FUNCTIONALITY_VERIFICATION = os.environ.get(
-        "SKIP_LLM_FUNCTIONALITY_VERIFICATION", "false") == "true"
-    
+    SKIP_LLM_FUNCTIONALITY_VERIFICATION = (
+        os.environ.get("SKIP_LLM_FUNCTIONALITY_VERIFICATION", "false") == "true"
+    )
+
 
 def load_config():
     # Load environment variables from .env file
@@ -95,7 +96,7 @@ def load_config():
         required_vars = [
             "OPENAI_API_KEY",
         ]
-    
+
     missing_vars = [var for var in required_vars if not os.environ.get(var)]
     if missing_vars:
         raise ValueError(f"Missing required environment variables: {missing_vars}")
