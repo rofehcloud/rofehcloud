@@ -123,6 +123,18 @@ aws s3api create-bucket --bucket my-new-secret-bucket-for-test-data --region us-
 ? Would you like the command to be executed? (Y/n)
 ```
 
+### Is there a way for the user to review and approve every command executed by RofehCloud?
+Yes, this is possible. To enable the feature please set environment variable `ASK_FOR_USER_CONFIRMATION_BEFORE_EXECUTING_EACH_COMMAND` to value `true`, either using `export` command or in local `.env` file. For example:
+```bash
+export ASK_FOR_USER_CONFIRMATION_BEFORE_EXECUTING_EACH_COMMAND=true
+```
+
+or in the local .env file:
+```
+ASK_FOR_USER_CONFIRMATION_BEFORE_EXECUTING_EACH_COMMAND=true
+```
+
+
 ## Contributing
 
 We welcome contributions to the RofehCloud project! If you would like to contribute, please follow these steps:
