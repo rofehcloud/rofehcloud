@@ -134,6 +134,12 @@ or in the local .env file:
 ASK_FOR_USER_CONFIRMATION_BEFORE_EXECUTING_EACH_COMMAND=true
 ```
 
+### Does RofehCloud support MinIO and OpenShift?
+Yes, just add the names of relevant CLI tools to environment variable ADDITIONAL_TOOLS; for example:
+```
+export ADDITIONAL_TOOLS=mc,oc
+```
+
 
 ## Contributing
 
