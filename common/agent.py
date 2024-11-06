@@ -252,6 +252,24 @@ def setup_services(profile: str):
                 "resources using 'az' commands. "
             )
 
+        if "esxcli" in config.ALL_TOOLS:
+            log_message("DEBUG", "Adding esxcli tool...")
+            tool_names.append("esxcli")
+
+            cli_tool_description += (
+                "Can be used to get the current state of VMware ESXi "
+                "resources using 'esxcli' commands. "
+            )
+
+        if "ncli" in config.ALL_TOOLS:
+            log_message("DEBUG", "Adding ncli tool...")
+            tool_names.append("ncli")
+
+            cli_tool_description += (
+                "Can be used to get the current state of Nutanix "
+                "resources using 'ncli' commands. "
+            )
+
         if len(tool_names) == 0:
             raise ValueError("No public cloud or K8s tools are available to work with.")
 

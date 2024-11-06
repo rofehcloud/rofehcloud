@@ -140,6 +140,12 @@ Yes, just add the names of relevant CLI tools to environment variable ADDITIONAL
 export ADDITIONAL_TOOLS=mc,oc
 ```
 
+### Does RofehCloud support on-perm virtualization platforms like Nutanix or VMware ESXi?
+Yes, just add the names of relevant CLI tools to environment variable ADDITIONAL_TOOLS; for example (in .env file):
+
+```
+ADDITIONAL_TOOLS=esxcli,ncli
+```
 
 ## Contributing
 

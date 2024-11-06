@@ -17,8 +17,16 @@ def get_profiles():
 
 
 def check_available_tools(profile):
-    for tool in config.ALL_TOOLS:
+    if config.SKIP_THE_CHECK_FOR_AVAILABLE_TOOLS:
+        log_message(
+            "INFO",
+            "Skipping the check for available tools (SKIP_THE_CHECK_FOR_AVAILABLE_TOOLS is set to true)",
+        )
+        return
+    copy_of_all_tools = config.ALL_TOOLS.copy()
+    for tool in copy_of_all_tools:
         # check that the tool is available in the path and executable
+        log_message("DEBUG", f"Checking if tool {tool} is available in the PATH")
         if not shutil.which(tool):
             log_message("DEBUG", f"Tool {tool} not found in the PATH")
             print(

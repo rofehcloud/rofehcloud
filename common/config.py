@@ -89,6 +89,10 @@ class Config:
         os.environ.get("SKIP_LLM_FUNCTIONALITY_VERIFICATION", "false") == "true"
     )
 
+    SKIP_THE_CHECK_FOR_AVAILABLE_TOOLS = (
+        os.environ.get("SKIP_THE_CHECK_FOR_AVAILABLE_TOOLS", "false") == "true"
+    )
+
 
 def load_config():
     # Load environment variables from .env file
