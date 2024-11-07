@@ -29,7 +29,7 @@ The name RofehCloud is a play on Hebrew word "rofeh" that means "doctor".
 
 - RofehCloud runs locally on your computer and for troubleshooting uses your already configured cloud access credentials for CLI tools like "aws", "gcloud", "az" and "kubectl"
 - The text-based tool provides an easy-to-use chat interface
-- Supports OpenAI and AWS Bedrock Anthropic Claude LLMs
+- Supports OpenAI, Azure OpenAI and AWS Bedrock Anthropic Claude LLMs
 - Protects from incidental change of data locally or in connected clouds
 
 RofehCloud does not require any additional components to be installed in the troubleshooted public cloud or K8s environments.
