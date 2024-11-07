@@ -1,5 +1,6 @@
 import tiktoken
 import openai
+from openai import AzureOpenAI
 import json
 import boto3
 from botocore.config import Config
@@ -19,6 +20,13 @@ if config.LLM_TO_USE == "bedrock":
     )
     bedrock_client = session.client(service_name="bedrock-runtime")
 
+if config.LLM_TO_USE == "azure-openai":
+    client = AzureOpenAI(
+        api_key=config.AZURE_OPENAI_API_KEY,
+        api_version=config.AZURE_OPENAI_API_VERSION,
+        azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+    )
+
 
 def count_tokens(text):
     encoding = tiktoken.encoding_for_model("gpt-4-0613")
@@ -31,6 +39,8 @@ def call_llm(prompt, llm):
         return call_openai(prompt, config.OPENAI_GENERAL_MODEL_ID)
     elif llm == "bedrock":
         return call_bedrock_llm(prompt, config.BEDROCK_GENERAL_MODEL_ID)
+    elif llm == "azure-openai":
+        return call_azure_openai_llm(prompt, config.AZURE_OPENAI_MODEL_ID)
     else:
         log_message("ERROR", f"LLM {llm} not supported.")
         return False
@@ -42,7 +52,7 @@ def call_openai(prompt, model_id):
         log_message("DEBUG", f"Calling OpenAI ({tokens} tokens in the prompt)...")
         response_from_openai = client.chat.completions.create(
             model=model_id,
-            temperature=0,
+            temperature=config.OPENAI_TEMPERATURE,
             messages=[{"role": "user", "content": prompt}],
         )
         response = response_from_openai.choices[0].message.content
@@ -54,6 +64,24 @@ def call_openai(prompt, model_id):
         return False
 
 
+def call_azure_openai_llm(prompt, model_id):
+    try:
+        tokens = count_tokens(prompt)
+        log_message("DEBUG", f"Calling Azure OpenAI ({tokens} tokens in the prompt)...")
+        response_from_openai = client.chat.completions.create(
+            model=model_id,
+            temperature=config.AZURE_OPENAI_TEMPERATURE,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        response = response_from_openai.choices[0].message.content
+        log_message("DEBUG", f"Response from Azure OpenAI: {response}")
+        return response
+
+    except Exception as e:
+        log_message("ERROR", f"Error while calling Azure OpenAI: {e}")
+        return False
+
+
 def call_bedrock_llm(prompt, model_id):
     try:
         response = bedrock_client.invoke_model(
@@ -62,7 +90,7 @@ def call_bedrock_llm(prompt, model_id):
                 {
                     "anthropic_version": "bedrock-2023-05-31",
                     "max_tokens": 4096,
-                    "temperature": 0.0,
+                    "temperature": config.BEDROCK_TEMPERATURE,
                     "messages": [
                         {
                             "role": "user",
@@ -102,19 +130,19 @@ def call_bedrock_llm(prompt, model_id):
 
 
 def verify_llm_functionality():
-    if config.SKIP_LLM_FUNCTIONALITY_VERIFICATION:
-        log_message("INFO", "Skipping LLM functionality verification.")
-        return True
-    log_message("DEBUG", f"Verifying LLM functionality ({config.LLM_TO_USE})...")
-    if config.LLM_TO_USE == "openai":
-        response = call_openai("Hello, world!", config.OPENAI_GENERAL_MODEL_ID)
-    elif config.LLM_TO_USE == "bedrock":
-        response = call_bedrock_llm("Hello, world!", config.BEDROCK_GENERAL_MODEL_ID)
-    else:
-        raise Exception(f"LLM {config.LLM_TO_USE} not supported.")
+    try:
+        if config.SKIP_LLM_FUNCTIONALITY_VERIFICATION:
+            log_message("INFO", "Skipping LLM functionality verification.")
+            return True
 
-    if isinstance(response, str) and len(response) > 0:
-        log_message("DEBUG", "LLM functionality verified.")
-        return True
-    else:
-        raise Exception("LLM functionality verification failed.")
+        log_message("DEBUG", f"Verifying LLM functionality ({config.LLM_TO_USE})...")
+        response = call_llm("Hello, world!", config.LLM_TO_USE)
+
+        if isinstance(response, str) and len(response) > 0:
+            log_message("DEBUG", "LLM functionality verified.")
+            return True
+        else:
+            raise Exception("LLM functionality verification failed.")
+    except Exception as e:
+        log_message("ERROR", f"Error while verifying LLM functionality: {e}")
+        return False

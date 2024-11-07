@@ -6,12 +6,14 @@ load_dotenv(".env")
 
 
 class Config:
-    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
     PROFILE_DIR = os.path.expanduser(os.environ.get("PROFILE_DIR", "~/.rofehcloud"))
     SESSION_DIR = f"{PROFILE_DIR}/sessions"
     PROFILES_FILE = f"{PROFILE_DIR}/profiles.yaml"
+
+    # OpenAI-related settings
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
     OPENAI_LANGCHAIN_AGENT_MODEL_ID = os.environ.get(
         "OPENAI_LANGCHAIN_AGENT_MODEL_ID",
@@ -25,11 +27,32 @@ class Config:
         # "gpt-4o"
         "gpt-4o-mini",
     )
+    OPENAI_TEMPERATURE = float(os.environ.get("OPENAI_TEMPERATURE", 0.3))
+
+    # Azure OpenAI-related settings
+    AZURE_OPENAI_API_KEY = os.environ.get("AZURE_OPENAI_API_KEY")
+    AZURE_OPENAI_DEPLOYMENT_ID = os.environ.get("AZURE_OPENAI_DEPLOYMENT_ID")
+
+    AZURE_OPENAI_API_VERSION = os.environ.get(
+        "AZURE_OPENAI_API_VERSION", "2024-08-01-preview"
+    )
+
+    AZURE_OPENAI_MODEL_ID = os.environ.get(
+        "AZURE_OPENAI_MODEL_ID",
+        # "gpt-4-turbo-2024-04-09"
+        "gpt-4o-mini"
+        # "gpt-4o-mini"
+        # "gpt-4-1106-preview",
+    )
+
+    AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")
+    AZURE_OPENAI_TEMPERATURE = float(os.environ.get("AZURE_OPENAI_TEMPERATURE", 0.3))
 
     LANGCHAIN_AGENT_MODEL_TEMPERATURE = float(
         os.environ.get("LANGCHAIN_AGENT_MODEL_TEMPERATURE", 0.3)
     )
 
+    # AWS Bedrock-related settings
     BEDROCK_LANGCHAIN_AGENT_MODEL_ID = os.environ.get(
         "BEDROCK_LANGCHAIN_AGENT_MODEL_ID",
         # "anthropic.claude-3-haiku-20240307-v1:0"
@@ -44,6 +67,7 @@ class Config:
         # "anthropic.claude-3-sonnet-20240229-v1:0",
         # "anthropic.claude-3-opus-20240229-v1:0",
     )
+    BEDROCK_TEMPERATURE = float(os.environ.get("BEDROCK_TEMPERATURE", 0.3))
 
     BEDROCK_PROFILE_NAME = os.environ.get("BEDROCK_PROFILE_NAME", "default")
     BEDROCK_AWS_REGION = os.environ.get("BEDROCK_AWS_REGION", "us-east-1")
@@ -108,9 +132,17 @@ def load_config():
             "OPENAI_API_KEY",
         ]
 
+    if config.LLM_TO_USE == "azure-openai":
+        required_vars = [
+            "AZURE_OPENAI_API_KEY",
+            "AZURE_OPENAI_DEPLOYMENT_ID",
+            "AZURE_OPENAI_ENDPOINT",
+        ]
+
     missing_vars = [var for var in required_vars if not os.environ.get(var)]
     if missing_vars:
-        raise ValueError(f"Missing required environment variables: {missing_vars}")
+        print(f"Missing required environment variables: {missing_vars}")
+        exit(1)
 
     return config
 

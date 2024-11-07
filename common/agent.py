@@ -15,6 +15,7 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 
 from langchain_aws import ChatBedrock
 from langchain_openai import ChatOpenAI as OpenAILangChain
+from langchain_openai import AzureChatOpenAI
 
 
 from common.config import Config as config
@@ -169,7 +170,7 @@ def setup_services(profile: str):
             )
             openai.api_key = config.OPENAI_API_KEY
             llm_langchain = OpenAILangChain(
-                temperature=config.LANGCHAIN_AGENT_MODEL_TEMPERATURE,
+                temperature=config.OPENAI_TEMPERATURE,
                 model=config.OPENAI_LANGCHAIN_AGENT_MODEL_ID,
                 openai_api_key=config.OPENAI_API_KEY,
                 request_timeout=240,
@@ -187,9 +188,28 @@ def setup_services(profile: str):
                 credentials_profile_name=config.BEDROCK_PROFILE_NAME,
                 region_name=config.BEDROCK_AWS_REGION,
                 model_id=config.BEDROCK_LANGCHAIN_AGENT_MODEL_ID,
-                model_kwargs={"temperature": 0, "max_tokens": 4096},
+                model_kwargs={
+                    "temperature": config.BEDROCK_TEMPERATURE,
+                    "max_tokens": 4096,
+                },
             )
 
+        elif config.LLM_TO_USE == "azure-openai":
+            print(
+                f"Using Azure OpenAI LLM, model ID for the agent: {config.AZURE_OPENAI_MODEL_ID}"
+                f" with temperature: {config.AZURE_OPENAI_TEMPERATURE}, "
+                f"deployment ID: {config.AZURE_OPENAI_DEPLOYMENT_ID}, "
+                f"API version: {config.AZURE_OPENAI_API_VERSION}"
+            )
+
+            llm_langchain = AzureChatOpenAI(
+                azure_deployment=config.AZURE_OPENAI_DEPLOYMENT_ID,
+                api_version=config.AZURE_OPENAI_API_VERSION,
+                temperature=config.AZURE_OPENAI_TEMPERATURE,
+                max_tokens=4096,
+                timeout=240,
+                max_retries=2,
+            )
         else:
             raise ValueError(f"LLM {config.LLM_TO_USE} is not supported.")
 

@@ -61,6 +61,15 @@ RofehCloud can work with one of the following LLM services:
 - OpenAI Enterprise API (default LLM):
    - Configure the API key in environment variable OPENAI_API_KEY
    - Recommended (default) OpenAI models are gpt-4o and gpt-4o-mini
+- Azure OpenAI service:
+   - Set environment variable LLM_TO_USE to "azure-openai"
+   - Configure the OpenAI API key in variable AZURE_OPENAI_API_KEY, Deployment ID in variable AZURE_OPENAI_DEPLOYMENT_ID, and deployment endpoint URL in variable AZURE_OPENAI_ENDPOINT. For example:
+   ```
+   LLM_TO_USE=azure-openai
+   AZURE_OPENAI_API_KEY=xxxxxxxxx
+   AZURE_OPENAI_ENDPOINT=https://myazureapiendpoint.openai.azure.com
+   AZURE_OPENAI_DEPLOYMENT_ID=gpt-4o
+   ```
 - Anthropic Claude models running on AWS Bedrock service:
    - Set environment variable LLM_TO_USE to "bedrock"
    - If the AWS Bedrock service is accessible using a non-default AWS profile, then set the profile name in environment variable BEDROCK_PROFILE_NAME and AWS Bedrock region code name (like "us-west-2") in variable BEDROCK_AWS_REGION
