@@ -174,7 +174,7 @@ def setup_services(profile: str):
                 model=config.OPENAI_LANGCHAIN_AGENT_MODEL_ID,
                 openai_api_key=config.OPENAI_API_KEY,
                 request_timeout=240,
-                max_tokens=4096,
+                max_tokens=config.OPENAI_MAX_RESPONSE_TOKENS,
                 streaming=False,
             )
         elif config.LLM_TO_USE == "bedrock":
@@ -190,7 +190,7 @@ def setup_services(profile: str):
                 model_id=config.BEDROCK_LANGCHAIN_AGENT_MODEL_ID,
                 model_kwargs={
                     "temperature": config.BEDROCK_TEMPERATURE,
-                    "max_tokens": 4096,
+                    "max_tokens": config.BEDROCK_MAX_RESPONSE_TOKENS,
                 },
             )
 
@@ -206,7 +206,7 @@ def setup_services(profile: str):
                 azure_deployment=config.AZURE_OPENAI_DEPLOYMENT_ID,
                 api_version=config.AZURE_OPENAI_API_VERSION,
                 temperature=config.AZURE_OPENAI_TEMPERATURE,
-                max_tokens=4096,
+                max_tokens=config.AZURE_OPENAI_MAX_RESPONSE_TOKENS,
                 timeout=240,
                 max_retries=2,
             )

@@ -28,6 +28,7 @@ class Config:
         "gpt-4o-mini",
     )
     OPENAI_TEMPERATURE = float(os.environ.get("OPENAI_TEMPERATURE", 0.3))
+    OPENAI_MAX_RESPONSE_TOKENS = int(os.environ.get("OPENAI_MAX_RESPONSE_TOKENS", 4096))
 
     # Azure OpenAI-related settings
     AZURE_OPENAI_API_KEY = os.environ.get("AZURE_OPENAI_API_KEY")
@@ -47,6 +48,9 @@ class Config:
 
     AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")
     AZURE_OPENAI_TEMPERATURE = float(os.environ.get("AZURE_OPENAI_TEMPERATURE", 0.3))
+    AZURE_OPENAI_MAX_RESPONSE_TOKENS = int(
+        os.environ.get("AZURE_OPENAI_MAX_RESPONSE_TOKENS", 4096)
+    )
 
     LANGCHAIN_AGENT_MODEL_TEMPERATURE = float(
         os.environ.get("LANGCHAIN_AGENT_MODEL_TEMPERATURE", 0.3)
@@ -71,6 +75,7 @@ class Config:
 
     BEDROCK_PROFILE_NAME = os.environ.get("BEDROCK_PROFILE_NAME", "default")
     BEDROCK_AWS_REGION = os.environ.get("BEDROCK_AWS_REGION", "us-east-1")
+    BEDROCK_MAX_RESPONSE_TOKENS = int(os.environ.get("BEDROCK_MAX_RESPONSE_TOKENS", 4096))
 
     AGENT_MAX_ITERATIONS = int(os.environ.get("AGENT_MAX_ITERATIONS", 30))
     COMMAND_OUTPUT_MAX_LENGTH_CHARS = int(

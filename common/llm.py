@@ -89,7 +89,7 @@ def call_bedrock_llm(prompt, model_id):
             body=json.dumps(
                 {
                     "anthropic_version": "bedrock-2023-05-31",
-                    "max_tokens": 4096,
+                    "max_tokens": config.BEDROCK_MAX_RESPONSE_TOKENS,
                     "temperature": config.BEDROCK_TEMPERATURE,
                     "messages": [
                         {
