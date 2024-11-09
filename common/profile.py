@@ -1,5 +1,8 @@
 import shutil
+import os
 from colorama import init, Style
+import yaml
+from cerberus import Validator
 
 from common.config import Config as config
 from common.chat import load_data
@@ -34,3 +37,61 @@ def check_available_tools(profile):
                 "We highly recommend to install the tool and restart the app."
             )
             config.ALL_TOOLS.remove(tool)
+
+
+def read_profile(profile: str) -> dict:
+    profile_file = f"{config.PROFILES_DIR}/{profile}.yaml"
+    log_message("DEBUG", f"Reading profile from {profile_file}")
+    if not os.path.exists(profile_file):
+        log_message("ERROR", f"Profile file {profile_file} not found")
+        return None
+
+    profile_data = load_data(profile_file)
+    if profile_data is None:
+        log_message("ERROR", f"Error while reading profile {profile}")
+        return None
+
+    if validate_profile(profile_data):
+        return profile_data
+    else:
+        return None
+
+
+def validate_profile(profile_data: str) -> bool:
+    schema = {
+        "name": {"type": "string", "required": True},
+        "description": {"type": "string", "required": True},
+        "source_code_repositories": {
+            "type": "list",
+            "required": False,
+            "schema": {
+                "type": "dict",
+                "schema": {
+                    "name": {"type": "string", "required": True},
+                    "type": {
+                        "type": "string",
+                        "required": True,
+                        "allowed": ["github", "gitlab", "bitbucket"],
+                    },
+                    "local_directory": {"type": "string", "required": True},
+                    "description": {"type": "string", "required": True},
+                },
+            },
+        },
+    }
+
+    # Initialize the validator with the schema
+    validator = Validator(schema)
+
+    try:
+        # Validate data against the schema
+        if validator.validate(profile_data):
+            log_message("DEBUG", "Profile's YAML content is valid.")
+            return True
+        else:
+            print("YAML content is invalid.")
+            print("Errors:", validator.errors)
+            return False
+    except yaml.YAMLError as e:
+        print(f"Error parsing YAML: {e}")
+        return False

@@ -1,5 +1,6 @@
 import openai
 import platform
+import os
 
 import time
 import subprocess
@@ -79,6 +80,14 @@ def check_that_command_is_safe(command):
 
 
 def api_command_executor(command):
+    return local_command_executor(command)
+
+
+def repo_command_executor(command, local_directory):
+    return local_command_executor(command, local_directory)
+
+
+def local_command_executor(command, local_directory=None):
     command = fix_unclosed_quote(command)
 
     if config.ASK_FOR_USER_CONFIRMATION_BEFORE_EXECUTING_EACH_COMMAND:
@@ -116,7 +125,12 @@ def api_command_executor(command):
             else:
                 return data_modification_command_denied
 
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    if local_directory is None:
+        local_directory = os.getcwd()
+
+    result = subprocess.run(
+        command, shell=True, capture_output=True, text=True, cwd=local_directory
+    )
     stdout = result.stdout
     stderr = result.stderr
     error_code = result.returncode
@@ -151,7 +165,7 @@ def before_generating_the_final_answer(prompt: str) -> str:
 agent_with_chat_history = None
 
 
-def setup_services(profile: str):
+def setup_services(profile_data: dict):
     global agent_with_chat_history
 
     try:
@@ -163,10 +177,11 @@ def setup_services(profile: str):
         tools = {}
 
         if config.LLM_TO_USE == "openai":
-            print(
+            log_message(
+                "INFO",
                 f"Using OpenAI LLM, model ID for the agent: {config.OPENAI_LANGCHAIN_AGENT_MODEL_ID}"
                 f" with temperature: {config.LANGCHAIN_AGENT_MODEL_TEMPERATURE}; "
-                f"model ID for general calls: {config.OPENAI_GENERAL_MODEL_ID}"
+                f"model ID for general calls: {config.OPENAI_GENERAL_MODEL_ID}",
             )
             openai.api_key = config.OPENAI_API_KEY
             llm_langchain = OpenAILangChain(
@@ -178,10 +193,11 @@ def setup_services(profile: str):
                 streaming=False,
             )
         elif config.LLM_TO_USE == "bedrock":
-            print(
+            log_message(
+                "INFO",
                 f"Using Bedrock LLM, model ID for the agent: {config.BEDROCK_LANGCHAIN_AGENT_MODEL_ID}"
                 f" with profile name: {config.BEDROCK_PROFILE_NAME} in region: {config.BEDROCK_AWS_REGION}, "
-                f"model ID for general calls: {config.BEDROCK_GENERAL_MODEL_ID}"
+                f"model ID for general calls: {config.BEDROCK_GENERAL_MODEL_ID}",
             )
 
             llm_langchain = ChatBedrock(
@@ -195,11 +211,12 @@ def setup_services(profile: str):
             )
 
         elif config.LLM_TO_USE == "azure-openai":
-            print(
+            log_message(
+                "INFO",
                 f"Using Azure OpenAI LLM, model ID for the agent: {config.AZURE_OPENAI_MODEL_ID}"
                 f" with temperature: {config.AZURE_OPENAI_TEMPERATURE}, "
                 f"deployment ID: {config.AZURE_OPENAI_DEPLOYMENT_ID}, "
-                f"API version: {config.AZURE_OPENAI_API_VERSION}"
+                f"API version: {config.AZURE_OPENAI_API_VERSION}",
             )
 
             llm_langchain = AzureChatOpenAI(
@@ -312,6 +329,62 @@ def setup_services(profile: str):
                 description=cli_tool_description,
             )
         )
+
+        def return_description_for_repo_tool(repo_name, repo_description):
+            return (
+                f"Useful to run shell commands like {config.ALL_TOOLS} "
+                "on source code repository named "
+                f"'{repo_name}'. "
+                f"Short repository description: {repo_description}. "
+                "The shell accepts one parameter - the shell command to run (no comments, "
+                "no redirects). Using 'grep' or 'tail' commands limit the output to 400 lines max. "
+                "Do not prefix file names with the repository name, just use the file name. "
+                "If the tool returns 'Empty Response' string then do not use it again "
+                "for the same query. "
+                "When looking for component-specific files search for both files and "
+                "directories file types. GitHub Actions jobs can be found in the .github/workflows "
+                "directory. "
+                "If a command returns an error, then analyze the error message and try to fix the command. "
+            )
+
+        def create_git_command_wrapper(repo_directory):
+            def git_command_wrapper(command):
+                return repo_command_executor(command, repo_directory)
+
+            return git_command_wrapper
+
+        git_command_wrappers = {}
+
+        if (
+            "source_code_repositories" in profile_data
+            and len(profile_data["source_code_repositories"]) > 0
+        ):
+            log_message("DEBUG", "Adding source code repository tools...")
+
+            for repo in profile_data["source_code_repositories"]:
+                repo_name = repo["name"]
+                repo_description = repo["description"]
+                repo_directory = repo["local_directory"]
+                log_message(
+                    "INFO",
+                    f"Adding source code tool for repo {repo_name}, local directory: {repo_directory}",
+                )
+                tool_names.append(f"repo {repo_name}")
+
+                git_command_wrappers[repo_name] = create_git_command_wrapper(
+                    repo_directory
+                )
+                tools.append(
+                    Tool.from_function(
+                        func=git_command_wrappers[repo_name],
+                        name=f"Run a command in repository '{repo_name}'",
+                        description=return_description_for_repo_tool(
+                            repo_name, repo_description
+                        ),
+                    ),
+                )
+        else:
+            log_message("INFO", "No source code repositories to add")
 
         print(
             Style.BRIGHT

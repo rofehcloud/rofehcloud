@@ -8,9 +8,9 @@ load_dotenv(".env")
 class Config:
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
-    PROFILE_DIR = os.path.expanduser(os.environ.get("PROFILE_DIR", "~/.rofehcloud"))
-    SESSION_DIR = f"{PROFILE_DIR}/sessions"
-    PROFILES_FILE = f"{PROFILE_DIR}/profiles.yaml"
+    APP_DATA_DIR = os.path.expanduser(os.environ.get("APP_DATA_DIR", "~/.rofehcloud"))
+    SESSION_DIR = f"{APP_DATA_DIR}/sessions"
+    PROFILES_DIR = f"{APP_DATA_DIR}/profiles"
 
     # OpenAI-related settings
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -75,7 +75,9 @@ class Config:
 
     BEDROCK_PROFILE_NAME = os.environ.get("BEDROCK_PROFILE_NAME", "default")
     BEDROCK_AWS_REGION = os.environ.get("BEDROCK_AWS_REGION", "us-east-1")
-    BEDROCK_MAX_RESPONSE_TOKENS = int(os.environ.get("BEDROCK_MAX_RESPONSE_TOKENS", 4096))
+    BEDROCK_MAX_RESPONSE_TOKENS = int(
+        os.environ.get("BEDROCK_MAX_RESPONSE_TOKENS", 4096)
+    )
 
     AGENT_MAX_ITERATIONS = int(os.environ.get("AGENT_MAX_ITERATIONS", 30))
     COMMAND_OUTPUT_MAX_LENGTH_CHARS = int(
@@ -98,7 +100,7 @@ class Config:
     STANDARD_TOOLS = os.environ.get(
         "STANDARD_TOOLS",
         (
-            "sed,awk,ping,wget,curl,dig,traceroute,helm,"
+            "git,cat,find,sed,awk,xargs,ping,wget,curl,dig,traceroute,helm,"
             "jq,yq,cut,bc,head,tail,sort,uniq,wc,grep,egrep"
         ),
     ).split(",")
@@ -131,6 +133,14 @@ def load_config():
     config = Config()
 
     required_vars = []
+
+    if config.LLM_TO_USE not in ["openai", "azure-openai", "bedrock"]:
+        print(
+            f"ERROR: Invalid value for LLM_TO_USE: {config.LLM_TO_USE}. Must be one "
+            "of 'openai', 'azure-openai', or 'bedrock'."
+        )
+        exit(1)
+
     # Check that all required variables are set; list missing environment variables before raising an exception
     if config.LLM_TO_USE == "openai":
         required_vars = [
