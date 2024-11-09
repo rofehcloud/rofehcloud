@@ -26,15 +26,25 @@ def initialize_environment():
     # Initialize the environment here
     try:
         # check that directory exists
-        if not os.path.exists(config.PROFILE_DIR):
-            os.makedirs(config.PROFILE_DIR)
+        if not os.path.exists(config.APP_DATA_DIR):
+            log_message(
+                "INFO", f"Creating RofehCloud app data directory {config.APP_DATA_DIR}"
+            )
+            os.makedirs(config.APP_DATA_DIR)
 
         if not os.path.exists(config.SESSION_DIR):
+            log_message("INFO", f"Creating the directory {config.SESSION_DIR}")
             os.makedirs(config.SESSION_DIR)
 
-        if not os.path.exists(config.PROFILES_FILE):
-            profiles = [{"name": "default", "description": "Default profile"}]
-            result = save_data(config.PROFILES_FILE, profiles)
+        if not os.path.exists(config.PROFILES_DIR):
+            log_message("INFO", f"Creating the directory {config.PROFILES_DIR}")
+            os.makedirs(config.PROFILES_DIR)
+
+        default_profile = f"{config.PROFILES_DIR}/default.yaml"
+
+        if not os.path.exists(default_profile):
+            profile = {"name": "default", "description": "Default profile"}
+            result = save_data(default_profile, profile)
             if not result:
                 log_message("ERROR", "Failed to save the default profile")
                 return False

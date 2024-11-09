@@ -16,7 +16,7 @@ Welcome to the RofehCloud project! This README will guide you through the setup 
 
 ## Introduction
 
-RofehCloud software is designed to help you with troubleshooting of simple and complex issues with Kubernetes and public clouds like AWS, Google Cloud (GCP), and Azure. 
+RofehCloud software is designed to help you with troubleshooting of simple and complex issues with Kubernetes and public clouds like AWS, Google Cloud (GCP), and Azure. RofehCloud can also use information from local clones of Git-compatible source code repositories.
 
 Ideal users of RofehCloud are:
 - Cloud/support engineers working for an MSP supporting many customers with widely different cloud/K8s environments
@@ -101,6 +101,24 @@ OPENAI_API_KEY=sk-xxx-xxxxxxxxxxxxxxxxxxxxxxxxxxx
 BEDROCK_PROFILE_NAME=bedrock_profile
 BEDROCK_AWS_REGION=us-east-2
 LLM_TO_USE=openai
+```
+
+5. Start RofehCloud for the first time so it will automatically create its data directory (~/.rofehcloud) and default profile configuration file (~/.rofehcloud/profiles/default.yaml):
+```bash
+./rofehcloud.py
+```
+
+6. Optional step: exit the RofehCloud CLI and configure RofehCloud's default profile (file ~/.rofehcloud/profiles/default.yaml) with information about local clones of source code repositories you want RofehCloud to be aware of. For example:
+
+```yaml
+name: default
+description: Default profile
+
+source_code_repositories:
+- name: rofehcloud
+  type: github
+  local_directory: /Users/username/rofehcloud/rofehcloud
+  description: AI-powered CLI tool for automatic troubleshooting issues with Kubernetes and public clouds like AWS, Google Cloud (GCP), and Azure.
 ```
 
 ## Usage

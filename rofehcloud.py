@@ -6,6 +6,8 @@ import questionary
 import tzlocal
 from datetime import datetime
 from colorama import init, Style
+from rich.console import Console
+from rich.markdown import Markdown
 
 from common.logger import log_message
 from common.agent import handle_user_prompt, setup_services
@@ -16,23 +18,29 @@ from common.chat import (
     get_conversations_list,
 )
 from common.config import Config as config
-from common.profile import check_available_tools
+from common.profile import check_available_tools, read_profile
 from common.utils import initialize_environment
 from common.llm import verify_llm_functionality
 
 
 init(autoreset=True)
 
+console = Console()
+
 # menu prompts
-continue_conversation = "Continue a previous conversation"
 ask_new_question = "Ask a new question"
 troubleshoot_problem = "Troubleshoot a problem"
+continue_conversation = "Continue a previous conversation"
 exit_item = "Exit"
 
 
 def text_based_interaction(profile: str):
+    profile_data = read_profile(profile)
+    if profile_data is None:
+        print(f"Profile {profile} not found.")
+        return
     check_available_tools(profile)
-    setup_services(profile)
+    setup_services(profile_data)
     verify_llm_functionality()
 
     while True:
@@ -40,9 +48,9 @@ def text_based_interaction(profile: str):
             "Choose an option (or use Ctrl+C to exit):",
             use_shortcuts=True,
             choices=[
-                continue_conversation,
                 ask_new_question,
                 troubleshoot_problem,
+                continue_conversation,
                 exit_item,
             ],
         ).ask()  # Returns the selected choice as a string
@@ -125,7 +133,12 @@ def text_based_interaction(profile: str):
                     prompt = "Enter your follow-up question: "
 
                 question = questionary.text(prompt, multiline=False).ask()
-                if question is None or question == "":
+                if (
+                    question is None
+                    or question == ""
+                    or question == "/q"
+                    or question == ":q"
+                ):
                     print("Returning to the main menu...")
                     break
 
@@ -177,7 +190,9 @@ def text_based_interaction(profile: str):
                     conversation_details["conversation_history"],
                 )
 
-                print(Style.BRIGHT + "Answer: " + Style.RESET_ALL + answer)
+                print(Style.BRIGHT + "Answer: " + Style.RESET_ALL)
+                console.print(Markdown(answer))
+
                 conversation_details["conversation_history"].append(
                     {"question": question, "answer": answer}
                 )
