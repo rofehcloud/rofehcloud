@@ -103,12 +103,12 @@ BEDROCK_AWS_REGION=us-east-2
 LLM_TO_USE=openai
 ```
 
-5. Start RofehCloud for the first time so it will automatically create its data directory (~/.rofehcloud) and default profile configuration file (~/.rofehcloud/profiles/default.yaml):
+5. Start RofehCloud for the first time so it will automatically create its data directory (`~/.rofehcloud`) and default profile configuration file (`~/.rofehcloud/profiles/default.yaml`):
 ```bash
 ./rofehcloud.py
 ```
 
-6. Optional step: exit the RofehCloud CLI and configure RofehCloud's default profile (file ~/.rofehcloud/profiles/default.yaml) with information about local clones of source code repositories you want RofehCloud to be aware of. For example:
+6. Optional step: exit the RofehCloud CLI and configure RofehCloud's default profile (file `~/.rofehcloud/profiles/default.yaml`) with information about local clones of source code repositories you want RofehCloud to be aware of. For example:
 
 ```yaml
 name: default
