@@ -242,6 +242,14 @@ def setup_services(profile_data: dict):
                         "Call the tool if you need to get the current date and time in UTC."
                     ),
                 ),
+                Tool.from_function(
+                    func=before_generating_the_final_answer,
+                    name="Before final answer",
+                    description=(
+                        "Call the tool right before generating the final answer to the original user "
+                        "question. Specify 'N/A' as the action input for the tool."
+                    ),
+                ),
             ]
         )
 
