@@ -17,8 +17,8 @@ class Config:
 
     OPENAI_LANGCHAIN_AGENT_MODEL_ID = os.environ.get(
         "OPENAI_LANGCHAIN_AGENT_MODEL_ID",
-        # "gpt-4-turbo-2024-04-09"
-        "gpt-4o"
+        "gpt-4-turbo"
+        # "gpt-4o"
         # "gpt-4o-mini"
         # "gpt-4-1106-preview",
     )
