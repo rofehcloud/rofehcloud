@@ -6,8 +6,8 @@ import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
-from common.config import Config as config
-from common.logger import log_message
+from rofehcloud.config import Config as config
+from rofehcloud.logger import log_message
 
 if config.LLM_TO_USE == "openai":
     client = openai.OpenAI(api_key=config.OPENAI_API_KEY)

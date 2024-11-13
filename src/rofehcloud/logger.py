@@ -4,7 +4,7 @@ import logging
 import inspect
 import os
 
-from common.config import Config as config
+from rofehcloud.config import Config as config
 
 # Configure the logging module
 logging.basicConfig(

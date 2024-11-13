@@ -19,16 +19,16 @@ from langchain_openai import ChatOpenAI as OpenAILangChain
 from langchain_openai import AzureChatOpenAI
 
 
-from common.config import Config as config
-from common.logger import log_message
+from rofehcloud.config import Config as config
+from rofehcloud.logger import log_message
 
-from common.utils import fix_unclosed_quote
-from common.constants import (
+from rofehcloud.utils import fix_unclosed_quote
+from rofehcloud.constants import (
     error_response,
     agent_prompt_with_history,
     data_modification_command_denied,
 )
-from common.llm import call_llm
+from rofehcloud.llm import call_llm
 
 init(autoreset=True)
 

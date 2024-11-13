@@ -7,3 +7,6 @@ __pycache__/
 *.log
 .vscode
 .ruff_cache
+
+build/
+src/*.egg-info/

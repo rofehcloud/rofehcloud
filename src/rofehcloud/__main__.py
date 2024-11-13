@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+import os
+
+if __package__ is None:
+    os.sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import uuid
 import argparse
@@ -9,18 +13,18 @@ from colorama import init, Style
 from rich.console import Console
 from rich.markdown import Markdown
 
-from common.logger import log_message
-from common.agent import handle_user_prompt, setup_services
-from common.chat import (
+from rofehcloud.logger import log_message
+from rofehcloud.agent import handle_user_prompt, setup_services
+from rofehcloud.chat import (
     get_conversation_label,
     save_data,
     load_data,
     get_conversations_list,
 )
-from common.config import Config as config
-from common.profile import check_available_tools, read_profile
-from common.utils import initialize_environment
-from common.llm import verify_llm_functionality
+from rofehcloud.config import Config as config
+from rofehcloud.profile import check_available_tools, read_profile
+from rofehcloud.utils import initialize_environment
+from rofehcloud.llm import verify_llm_functionality
 
 
 init(autoreset=True)
