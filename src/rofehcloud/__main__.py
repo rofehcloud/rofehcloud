@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 
 if __package__ is None:
     os.sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -8,6 +9,7 @@ import uuid
 import argparse
 import questionary
 import tzlocal
+from pathlib import Path
 from datetime import datetime
 from colorama import init, Style
 from rich.console import Console
@@ -215,12 +217,21 @@ def text_based_interaction(profile: str):
             break
 
 
-def main():
+def version() -> str:
+    return Path(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + "__version__").read_text()
+
+def main() -> int:
     result = initialize_environment()
     if not result:
-        exit(1)
+        return 1
 
     parser = argparse.ArgumentParser(description="CLI Application Options")
+    parser.add_argument(
+        "--version",
+        "-v",
+        action="store_true",
+        help="Just show the version and exit",
+    )
     parser.add_argument(
         "--mode",
         "-m",
@@ -236,6 +247,11 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.version:
+        print(version())
+        return 0
+
     profile = "default"
 
     if args.profile:
@@ -250,6 +266,9 @@ def main():
     log_message("DEBUG", f"Running in {mode} mode")
     text_based_interaction(profile)
 
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(
+        main(),
+    )
