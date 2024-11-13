@@ -261,12 +261,19 @@ def setup_services(profile_data: dict):
         if "aws" in config.ALL_TOOLS:
             log_message("DEBUG", "Adding AWS CLI tool...")
             tool_names.append("aws")
+            # Run aws to find out the default aws region
+            aws_region = subprocess.run(
+                "aws configure get region", shell=True, capture_output=True, text=True
+            ).stdout.strip()
+            if not aws_region or aws_region == "":
+                aws_region = "us-east-1"
 
             cli_tool_description += (
                 "Can be used to get the current state of AWS "
                 "resources using 'aws' commands. "
                 "When requesting "
                 "AWS CloudWatch metrics, pull the data for no more the past 7 days. "
+                f"The default AWS region is {aws_region}. "
             )
 
         if "gcloud" in config.ALL_TOOLS:
