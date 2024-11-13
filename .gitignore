@@ -8,5 +8,6 @@ __pycache__/
 .vscode
 .ruff_cache
 
+dist/
 build/
 src/*.egg-info/

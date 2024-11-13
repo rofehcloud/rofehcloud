@@ -15,6 +15,16 @@ logging.basicConfig(
 )
 
 
+# Shutting it up
+try:
+    import warnings
+    from langsmith.utils import LangSmithMissingAPIKeyWarning
+
+    warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
+except:  # noqa: E722
+    pass
+
+
 def log_message(level, message):
     logger = logging.getLogger(__name__)
 

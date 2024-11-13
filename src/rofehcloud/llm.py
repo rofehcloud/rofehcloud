@@ -9,24 +9,6 @@ from botocore.exceptions import ClientError
 from rofehcloud.config import Config as config
 from rofehcloud.logger import log_message
 
-if config.LLM_TO_USE == "openai":
-    client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
-
-
-if config.LLM_TO_USE == "bedrock":
-    boto3_config = Config(read_timeout=300)
-    session = boto3.Session(
-        profile_name=config.BEDROCK_PROFILE_NAME, region_name=config.BEDROCK_AWS_REGION
-    )
-    bedrock_client = session.client(service_name="bedrock-runtime")
-
-if config.LLM_TO_USE == "azure-openai":
-    client = AzureOpenAI(
-        api_key=config.AZURE_OPENAI_API_KEY,
-        api_version=config.AZURE_OPENAI_API_VERSION,
-        azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
-    )
-
 
 def count_tokens(text):
     encoding = tiktoken.encoding_for_model("gpt-4-0613")
@@ -47,6 +29,8 @@ def call_llm(prompt, llm):
 
 
 def call_openai(prompt, model_id):
+    client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
+
     try:
         tokens = count_tokens(prompt)
         log_message("DEBUG", f"Calling OpenAI ({tokens} tokens in the prompt)...")
@@ -65,6 +49,12 @@ def call_openai(prompt, model_id):
 
 
 def call_azure_openai_llm(prompt, model_id):
+    client = AzureOpenAI(
+        api_key=config.AZURE_OPENAI_API_KEY,
+        api_version=config.AZURE_OPENAI_API_VERSION,
+        azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+    )
+
     try:
         tokens = count_tokens(prompt)
         log_message("DEBUG", f"Calling Azure OpenAI ({tokens} tokens in the prompt)...")
@@ -83,6 +73,13 @@ def call_azure_openai_llm(prompt, model_id):
 
 
 def call_bedrock_llm(prompt, model_id):
+    Config(read_timeout=300)
+    session = boto3.Session(
+        profile_name=config.BEDROCK_PROFILE_NAME,
+        region_name=config.BEDROCK_AWS_REGION,
+    )
+    bedrock_client = session.client(service_name="bedrock-runtime")
+
     try:
         response = bedrock_client.invoke_model(
             modelId=model_id,
