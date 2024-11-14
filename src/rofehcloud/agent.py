@@ -27,6 +27,7 @@ from rofehcloud.constants import (
     error_response,
     agent_prompt_with_history,
     data_modification_command_denied,
+    truncated_message,
 )
 from rofehcloud.llm import call_llm
 
@@ -145,7 +146,10 @@ def local_command_executor(command, local_directory=None):
             f"Output is too long: {len(output)} characters; "
             f"truncating to {config.COMMAND_OUTPUT_MAX_LENGTH_CHARS} characters",
         )
-        output = output[: config.COMMAND_OUTPUT_MAX_LENGTH_CHARS] + "\n... (truncated)"
+        output = (
+            output[: config.COMMAND_OUTPUT_MAX_LENGTH_CHARS]
+            + f"\n... {truncated_message}"
+        )
     else:
         log_message("DEBUG", f"Output length: {len(output)} characters")
 
