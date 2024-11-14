@@ -1,9 +1,9 @@
 import os
 import yaml
 
-from common.llm import call_llm
-from common.logger import log_message
-from common.config import Config as config
+from rofehcloud.llm import call_llm
+from rofehcloud.logger import log_message
+from rofehcloud.config import Config as config
 
 
 def get_conversation_label(profile, user_input):

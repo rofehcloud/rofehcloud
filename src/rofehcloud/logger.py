@@ -4,7 +4,7 @@ import logging
 import inspect
 import os
 
-from common.config import Config as config
+from rofehcloud.config import Config as config
 
 # Configure the logging module
 logging.basicConfig(
@@ -13,6 +13,16 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[logging.StreamHandler()],  # Output logs to sys.stderr
 )
+
+
+# Shutting it up
+try:
+    import warnings
+    from langsmith.utils import LangSmithMissingAPIKeyWarning
+
+    warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
+except:  # noqa: E722
+    pass
 
 
 def log_message(level, message):

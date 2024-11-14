@@ -19,16 +19,17 @@ from langchain_openai import ChatOpenAI as OpenAILangChain
 from langchain_openai import AzureChatOpenAI
 
 
-from common.config import Config as config
-from common.logger import log_message
+from rofehcloud.config import Config as config
+from rofehcloud.logger import log_message
 
-from common.utils import fix_unclosed_quote
-from common.constants import (
+from rofehcloud.utils import fix_unclosed_quote
+from rofehcloud.constants import (
     error_response,
     agent_prompt_with_history,
     data_modification_command_denied,
+    truncated_message,
 )
-from common.llm import call_llm
+from rofehcloud.llm import call_llm
 
 init(autoreset=True)
 
@@ -145,7 +146,10 @@ def local_command_executor(command, local_directory=None):
             f"Output is too long: {len(output)} characters; "
             f"truncating to {config.COMMAND_OUTPUT_MAX_LENGTH_CHARS} characters",
         )
-        output = output[: config.COMMAND_OUTPUT_MAX_LENGTH_CHARS] + "\n... (truncated)"
+        output = (
+            output[: config.COMMAND_OUTPUT_MAX_LENGTH_CHARS]
+            + f"\n... {truncated_message}"
+        )
     else:
         log_message("DEBUG", f"Output length: {len(output)} characters")
 
@@ -261,12 +265,19 @@ def setup_services(profile_data: dict):
         if "aws" in config.ALL_TOOLS:
             log_message("DEBUG", "Adding AWS CLI tool...")
             tool_names.append("aws")
+            # Run aws to find out the default aws region
+            aws_region = subprocess.run(
+                "aws configure get region", shell=True, capture_output=True, text=True
+            ).stdout.strip()
+            if not aws_region or aws_region == "":
+                aws_region = "us-east-1"
 
             cli_tool_description += (
                 "Can be used to get the current state of AWS "
                 "resources using 'aws' commands. "
                 "When requesting "
                 "AWS CloudWatch metrics, pull the data for no more the past 7 days. "
+                f"The default AWS region is {aws_region}. "
             )
 
         if "gcloud" in config.ALL_TOOLS:

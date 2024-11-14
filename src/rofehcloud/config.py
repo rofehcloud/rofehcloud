@@ -17,7 +17,7 @@ class Config:
 
     OPENAI_LANGCHAIN_AGENT_MODEL_ID = os.environ.get(
         "OPENAI_LANGCHAIN_AGENT_MODEL_ID",
-        "gpt-4-turbo"
+        "gpt-4-turbo",
         # "gpt-4o"
         # "gpt-4o-mini"
         # "gpt-4-1106-preview",
@@ -41,7 +41,7 @@ class Config:
     AZURE_OPENAI_MODEL_ID = os.environ.get(
         "AZURE_OPENAI_MODEL_ID",
         # "gpt-4-turbo-2024-04-09"
-        "gpt-4o-mini"
+        "gpt-4o-mini",
         # "gpt-4o-mini"
         # "gpt-4-1106-preview",
     )
@@ -61,13 +61,13 @@ class Config:
         "BEDROCK_LANGCHAIN_AGENT_MODEL_ID",
         # "anthropic.claude-3-haiku-20240307-v1:0"
         # "anthropic.claude-3-sonnet-20240229-v1:0",
-        "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+        "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
         # "anthropic.claude-3-opus-20240229-v1:0",
     )
 
     BEDROCK_GENERAL_MODEL_ID = os.environ.get(
         "BEDROCK_GENERAL_MODEL_ID",
-        "anthropic.claude-3-haiku-20240307-v1:0"
+        "anthropic.claude-3-haiku-20240307-v1:0",
         # "anthropic.claude-3-sonnet-20240229-v1:0",
         # "anthropic.claude-3-opus-20240229-v1:0",
     )
@@ -124,43 +124,36 @@ class Config:
         os.environ.get("SKIP_THE_CHECK_FOR_AVAILABLE_TOOLS", "false") == "true"
     )
 
+    @classmethod
+    def validate(self):
+        load_dotenv(override=False)
 
-def load_config():
-    # Load environment variables from .env file
-    load_dotenv(override=False)
+        required_vars = []
 
-    global config
-    config = Config()
+        if self.LLM_TO_USE not in ["openai", "azure-openai", "bedrock"]:
+            print(
+                f"ERROR: Invalid value for LLM_TO_USE: {self.LLM_TO_USE}. Must be one "
+                "of 'openai', 'azure-openai', or 'bedrock'."
+            )
+            exit(1)
 
-    required_vars = []
+        # Check that all required variables are set; list missing environment variables before raising an exception
+        if self.LLM_TO_USE == "openai":
+            required_vars = [
+                "OPENAI_API_KEY",
+            ]
 
-    if config.LLM_TO_USE not in ["openai", "azure-openai", "bedrock"]:
-        print(
-            f"ERROR: Invalid value for LLM_TO_USE: {config.LLM_TO_USE}. Must be one "
-            "of 'openai', 'azure-openai', or 'bedrock'."
-        )
-        exit(1)
+        if self.LLM_TO_USE == "azure-openai":
+            required_vars = [
+                "AZURE_OPENAI_API_KEY",
+                "AZURE_OPENAI_DEPLOYMENT_ID",
+                "AZURE_OPENAI_ENDPOINT",
+            ]
 
-    # Check that all required variables are set; list missing environment variables before raising an exception
-    if config.LLM_TO_USE == "openai":
-        required_vars = [
-            "OPENAI_API_KEY",
-        ]
-
-    if config.LLM_TO_USE == "azure-openai":
-        required_vars = [
-            "AZURE_OPENAI_API_KEY",
-            "AZURE_OPENAI_DEPLOYMENT_ID",
-            "AZURE_OPENAI_ENDPOINT",
-        ]
-
-    missing_vars = [var for var in required_vars if not os.environ.get(var)]
-    if missing_vars:
-        print(f"Missing required environment variables: {missing_vars}")
-        exit(1)
-
-    return config
+        missing_vars = [var for var in required_vars if not os.environ.get(var)]
+        if missing_vars:
+            print(f"Missing required environment variables: {missing_vars}")
+            exit(1)
 
 
-# Load and validate the configuration when the module is imported
-load_config()
+config = Config()
