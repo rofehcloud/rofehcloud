@@ -9,5 +9,6 @@ install:
 
 
 check:
-	-black .
-	-ruff .
+	pre-commit run --all-files
+	# -black .
+	# -ruff .

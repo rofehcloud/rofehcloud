@@ -105,7 +105,7 @@ LLM_TO_USE=openai
 
 5. Start RofehCloud for the first time so it will automatically create its data directory (`~/.rofehcloud`) and default profile configuration file (`~/.rofehcloud/profiles/default.yaml`):
 ```bash
-./rofehcloud.py
+make run
 ```
 
 6. Optional step: exit the RofehCloud CLI and configure RofehCloud's default profile (file `~/.rofehcloud/profiles/default.yaml`) with information about local clones of source code repositories you want RofehCloud to be aware of. For example:
@@ -125,7 +125,7 @@ source_code_repositories:
 
 To start using RofehCloud, run the following command:
 ```bash
-./rofehcloud.py
+make run
 ```
 
 This will launch the application in the terminal console.
@@ -195,7 +195,7 @@ LANGCHAIN_PROJECT="<YOUR-PROJECT-NAME>"  # Update to LangSmith project name
 
 We welcome contributions to the RofehCloud project! If you would like to contribute, please follow these steps:
 
-1. Fork the repository.
+1. Fork the repository (don't forget to configure a [pre-commit hook](https://pre-commit.com/)).
 2. Create a new branch for your feature or bugfix.
 3. Commit your changes and push them to your fork.
 4. Submit a pull request with a detailed description of your changes.

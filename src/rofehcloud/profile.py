@@ -57,10 +57,36 @@ def read_profile(profile: str) -> dict:
         return None
 
 
+def save_profile(profile: str, profile_data: dict) -> bool:
+    profile_file = f"{config.PROFILES_DIR}/{profile}.yaml"
+    log_message("INFO", f"Saving profile to {profile_file}")
+    if not os.path.exists(config.PROFILES_DIR):
+        log_message("INFO", f"Creating directory {config.PROFILES_DIR}")
+        os.makedirs(config.PROFILES_DIR)
+
+    if not validate_profile(profile_data):
+        return False
+
+    if not os.path.exists(profile_file):
+        log_message("INFO", f"Creating profile file {profile_file}")
+    else:
+        log_message("INFO", f"Overwriting profile file {profile_file}")
+
+    with open(profile_file, "w") as f:
+        yaml.dump(profile_data, f)
+
+    return True
+
+
 def validate_profile(profile_data: str) -> bool:
     schema = {
         "name": {"type": "string", "required": True},
         "description": {"type": "string", "required": True},
+        "aws_regions_with_resources": {
+            "type": "list",
+            "required": False,
+            "schema": {"type": "string"},
+        },
         "source_code_repositories": {
             "type": "list",
             "required": False,
