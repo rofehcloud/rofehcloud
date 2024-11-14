@@ -44,6 +44,11 @@ Some examples of queries/issues RofehCloud can handle:
 - Why do we have two pending k8s pods? How to fix them?
 
 
+Examples of troubleshooting sessions:
+
+![troubleshooting example 1](media/troubleshooting-example-1.png)
+
+
 ## Installation
 
 ### Prerequisites

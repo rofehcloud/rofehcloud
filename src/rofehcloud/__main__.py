@@ -34,7 +34,7 @@ from rofehcloud.aws import get_regions_with_resources
 ask_new_question = "Ask a new question"
 troubleshoot_problem = "Troubleshoot a problem"
 continue_conversation = "Continue a previous conversation"
-discover_cloud_resources = "Discover active AWS regions"
+discover_cloud_resources = "Find AWS regions with deployed resources"
 exit_item = "Exit"
 
 
