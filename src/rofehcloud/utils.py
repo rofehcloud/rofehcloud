@@ -1,8 +1,8 @@
 import os
 
-from common.logger import log_message
-from common.config import Config as config
-from common.chat import save_data
+from rofehcloud.logger import log_message
+from rofehcloud.config import Config as config
+from rofehcloud.chat import save_data
 
 
 def generate_collection_name(profile: str) -> str:

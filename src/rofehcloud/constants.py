@@ -1,15 +1,17 @@
 error_response = "It looks like we hit a snag. Please check your profile configuration and try again."
 
-agent_prompt_with_history = """
+truncated_message = "(truncated)"
+
+agent_prompt_with_history = f"""
 Answer the following questions as best you can. You have access to the following tools:
 
-{tools}
+{{tools}}
 
 Use the following output format:
 
 Question: the input question you must answer
 Thought: you should always think about what to do
-Action: the action to take, should be one of [{tool_names}]
+Action: the action to take, should be one of [{{tool_names}}]
 Action Input: the input to the action
 Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times)
@@ -24,14 +26,16 @@ do not use the tool again with the same input. Try a different input or a differ
 3. Do not run the same query again on the same database to get more information. If you need more information
 then try to ask a different question or use a different tool.
 4. YAML files can have .yml or .yaml extensions.
+5. If a tool response ends with text "{truncated_message}", it means the response is too long and has been 
+truncated. Try to use the tool using a different input or filter the output to get a more concise response.
 
 Begin!
 
 Previous conversation history (from least recent to most recent):
-{chat_history}
+{{chat_history}}
 
-New input: {input}
-Thought: {agent_scratchpad}
+New input: {{input}}
+Thought: {{agent_scratchpad}}
 """
 
 

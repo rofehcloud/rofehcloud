@@ -1,31 +1,33 @@
 #!/usr/bin/env python3
+import os
+import sys
+
+if __package__ is None:
+    os.sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import uuid
 import argparse
 import questionary
 import tzlocal
+from pathlib import Path
 from datetime import datetime
 from colorama import init, Style
 from rich.console import Console
 from rich.markdown import Markdown
 
-from common.logger import log_message
-from common.agent import handle_user_prompt, setup_services
-from common.chat import (
+from rofehcloud.logger import log_message
+from rofehcloud.agent import handle_user_prompt, setup_services
+from rofehcloud.chat import (
     get_conversation_label,
     save_data,
     load_data,
     get_conversations_list,
 )
-from common.config import Config as config
-from common.profile import check_available_tools, read_profile
-from common.utils import initialize_environment
-from common.llm import verify_llm_functionality
+from rofehcloud.config import Config as config
+from rofehcloud.profile import check_available_tools, read_profile
+from rofehcloud.utils import initialize_environment
+from rofehcloud.llm import verify_llm_functionality
 
-
-init(autoreset=True)
-
-console = Console()
 
 # menu prompts
 ask_new_question = "Ask a new question"
@@ -34,7 +36,7 @@ continue_conversation = "Continue a previous conversation"
 exit_item = "Exit"
 
 
-def text_based_interaction(profile: str):
+def text_based_interaction(profile: str, console: Console):
     profile_data = read_profile(profile)
     if profile_data is None:
         print(f"Profile {profile} not found.")
@@ -159,9 +161,9 @@ def text_based_interaction(profile: str):
                         "session_id": session_id,
                         "conversation_label": conversation_label,
                         "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "conversation_type": "troubleshooting"
-                        if troubleshooting
-                        else "question",
+                        "conversation_type": (
+                            "troubleshooting" if troubleshooting else "question"
+                        ),
                         "conversation_history": [],
                     }
 
@@ -211,12 +213,20 @@ def text_based_interaction(profile: str):
             break
 
 
-def main():
-    result = initialize_environment()
-    if not result:
-        exit(1)
+def version() -> str:
+    return Path(
+        os.path.dirname(os.path.abspath(__file__)) + os.path.sep + "__version__"
+    ).read_text()
 
+
+def main() -> int:
     parser = argparse.ArgumentParser(description="CLI Application Options")
+    parser.add_argument(
+        "--version",
+        "-v",
+        action="store_true",
+        help="Just show the version and exit",
+    )
     parser.add_argument(
         "--mode",
         "-m",
@@ -232,6 +242,21 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.version:
+        print(version())
+        return 0
+
+    result = initialize_environment()
+    if not result:
+        return 1
+
+    init(autoreset=True)
+
+    console = Console()
+
+    config.validate()
+
     profile = "default"
 
     if args.profile:
@@ -244,8 +269,12 @@ def main():
         mode = "interactive"
 
     log_message("DEBUG", f"Running in {mode} mode")
-    text_based_interaction(profile)
+    text_based_interaction(profile, console)
+
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(
+        main(),
+    )

@@ -4,9 +4,9 @@ from colorama import init, Style
 import yaml
 from cerberus import Validator
 
-from common.config import Config as config
-from common.chat import load_data
-from common.logger import log_message
+from rofehcloud.config import Config as config
+from rofehcloud.chat import load_data
+from rofehcloud.logger import log_message
 
 init(autoreset=True)
 

@@ -1,5 +1,5 @@
 run:
-	python3 rofehcloud.py
+	python3 ./src/rofehcloud/__main__.py
 
 venv:
 	python3 -m venv .venv
