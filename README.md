@@ -48,6 +48,8 @@ Examples of troubleshooting sessions:
 
 ![troubleshooting example 1](media/troubleshooting-example-1.png)
 
+![troubleshooting example 2](media/troubleshooting-example-2.png)
+
 
 ## Installation
 
