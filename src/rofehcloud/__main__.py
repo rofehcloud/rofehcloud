@@ -24,15 +24,17 @@ from rofehcloud.chat import (
     get_conversations_list,
 )
 from rofehcloud.config import Config as config
-from rofehcloud.profile import check_available_tools, read_profile
+from rofehcloud.profile import check_available_tools, read_profile, save_profile
 from rofehcloud.utils import initialize_environment
 from rofehcloud.llm import verify_llm_functionality
+from rofehcloud.aws import get_regions_with_resources
 
 
 # menu prompts
 ask_new_question = "Ask a new question"
 troubleshoot_problem = "Troubleshoot a problem"
 continue_conversation = "Continue a previous conversation"
+discover_cloud_resources = "Discover active AWS regions"
 exit_item = "Exit"
 
 
@@ -53,9 +55,21 @@ def text_based_interaction(profile: str, console: Console):
                 ask_new_question,
                 troubleshoot_problem,
                 continue_conversation,
+                discover_cloud_resources,
                 exit_item,
             ],
         ).ask()  # Returns the selected choice as a string
+
+        if choice == discover_cloud_resources:
+            regions_with_resources = get_regions_with_resources()
+            log_message(
+                "INFO", f"Regions with deployed resources: {regions_with_resources}"
+            )
+            profile_data["aws_regions_with_resources"] = regions_with_resources
+            if not save_profile(profile, profile_data):
+                print("Error while saving the profile.")
+
+            continue
 
         if (
             choice == continue_conversation
@@ -116,12 +130,9 @@ def text_based_interaction(profile: str, console: Console):
                         + Style.RESET_ALL
                         + chat_entry["question"]
                     )
-                    print(
-                        Style.BRIGHT
-                        + "Answer: "
-                        + Style.RESET_ALL
-                        + chat_entry["answer"]
-                    )
+                    print(Style.BRIGHT + "Answer: " + Style.RESET_ALL)
+                    console.print(Markdown(chat_entry["answer"]))
+                    print("\n")
 
                 first_question = False
 
@@ -143,6 +154,25 @@ def text_based_interaction(profile: str, console: Console):
                 ):
                     print("Returning to the main menu...")
                     break
+
+                if troubleshooting and first_question:
+                    local_tz = tzlocal.get_localzone()
+                    current_time = datetime.now(local_tz)
+                    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+
+                    question_full = (
+                        "Using available tools, investigate the alert/issue provided below in XML tag "
+                        "<issue_to_investigate>. "
+                        "Review all reasonable scenarios "
+                        "why the problem could happen. Use available tooling to collect "
+                        "necessary debugging information. Perform Root Cause Analysis. "
+                        "Suggest remediation steps. "
+                        "Using bullet points, mention a summary of taken investigation steps. "
+                        f"The current GMT date/time is {formatted_time}.\n\n"
+                        f"<issue_to_investigate>{question}</issue_to_investigate>"
+                    )
+                else:
+                    question_full = question
 
                 if first_question:
                     first_question = False
@@ -168,23 +198,6 @@ def text_based_interaction(profile: str, console: Console):
                     }
 
                 session_file_name = f"{config.SESSION_DIR}/{session_id}.yaml"
-
-                if troubleshooting and troubleshooting:
-                    local_tz = tzlocal.get_localzone()
-                    current_time = datetime.now(local_tz)
-                    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-
-                    question_full = (
-                        "Using available tools, investigate the alert/issue provided below in XML tag "
-                        "<issue_to_investigate>. "
-                        "Review all reasonable scenarios "
-                        "why the problem could happen. Use available tooling to collect "
-                        "necessary debugging information. Perform Root Cause Analysis. "
-                        "Suggest remediation steps. "
-                        "Using bullet points, mention a summary of taken investigation steps. "
-                        f"The current GMT date/time is {formatted_time}.\n\n"
-                        f"<issue_to_investigate>{question}</issue_to_investigate>"
-                    )
 
                 answer = handle_user_prompt(
                     profile,

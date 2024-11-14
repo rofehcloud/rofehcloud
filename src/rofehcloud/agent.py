@@ -279,6 +279,13 @@ def setup_services(profile_data: dict):
                 "AWS CloudWatch metrics, pull the data for no more the past 7 days. "
                 f"The default AWS region is {aws_region}. "
             )
+            aws_regions = None
+            if (
+                profile_data["aws_regions_with_resources"]
+                and len(profile_data["aws_regions_with_resources"]) > 0
+            ):
+                aws_regions = profile_data["aws_regions_with_resources"]
+                cli_tool_description += f"The following AWS regions are available with resources: {aws_regions}. "
 
         if "gcloud" in config.ALL_TOOLS:
             log_message("DEBUG", "Adding gcloud CLI tool...")
