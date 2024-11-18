@@ -10,6 +10,7 @@ Welcome to the RofehCloud project! This README will guide you through the setup 
 - [Usage](#usage)
 - [Safety](#safety)
 - [FAQ](#faq)
+- [Feedback](#feedback)
 - [Contributing](#contributing)
 - [Authors](#authors)
 - [License](#license)
@@ -36,6 +37,9 @@ The name RofehCloud is a play on Hebrew word "rofeh" that means "doctor".
 RofehCloud does not require any additional components to be installed in the troubleshooted public cloud or K8s environments.
 
 Some examples of queries/issues RofehCloud can handle:
+- “Connection timeout” error when trying to communicate from EC2 instance i-0cdac72c5578a17db (located in ap-northeast-1 region) to RDS instance test2-warehouse located in us-east-2 region.
+- On EC2 instance  i-0991c22729522ca46 (located in ap-northeast-1 region) I’m getting an error “Access denied” when trying to read objects from S3 bucket “exchange-updates”.
+- Investigate unhealthy targets in AWS load balancer capture-test2-backend-lb located in us-east-2 region.
 - In what AWS regions do we have running EC2 instances?
 - Do we have any unused EBS volumes?
 - Why I cannot create S3 bucket named my_new_unique_s3_bucket_xcq?
@@ -197,6 +201,13 @@ LANGCHAIN_TRACING_V2=true
 LANGCHAIN_API_KEY=<YOUR-API-KEY>  # Update to your API key
 LANGCHAIN_PROJECT="<YOUR-PROJECT-NAME>"  # Update to LangSmith project name
 ```
+
+## Feedback
+If you have any questions or suggestions about RofehCloud you are welcome to use the following methods to provide your
+feedback:
+- Email your feedback to [team@rofehcloud.com](mailto:team@rofehcloud.com)
+- Via the mentioned email, ask to join our community Slack workspace [rofehcloud.slack.com](https://rofehcloud.slack.com)
+
 
 ## Contributing
 
