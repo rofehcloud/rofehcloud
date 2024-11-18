@@ -222,8 +222,8 @@ We welcome contributions to the RofehCloud project! If you would like to contrib
 ## Authors
 
 The project was initially created by:
-- **Victor Gartvich** - original developer
-- **Andre Buryndin** - code reviews and contributions
+- **[Victor Gartvich](https://github.com/vgartvich)** - original developer
+- **[Andre Buryndin](https://github.com/MrEcco)** - code reviews and contributions
 
 ## License
 
