@@ -206,6 +206,7 @@ LANGCHAIN_PROJECT="<YOUR-PROJECT-NAME>"  # Update to LangSmith project name
 If you have any questions or suggestions about RofehCloud you are welcome to use the following methods to provide your
 feedback:
 - Email your feedback to [team@rofehcloud.com](mailto:team@rofehcloud.com)
+- Create a [GitHub Issue](https://github.com/rofehcloud/rofehcloud/issues/new/choose)
 - Via the mentioned email, ask to join our community Slack workspace [rofehcloud.slack.com](https://rofehcloud.slack.com)
 
 
