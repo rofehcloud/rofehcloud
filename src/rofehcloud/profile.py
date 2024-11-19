@@ -25,7 +25,7 @@ def check_available_tools(profile):
             "INFO",
             "Skipping the check for available tools (SKIP_THE_CHECK_FOR_AVAILABLE_TOOLS is set to true)",
         )
-        return
+        return True
     copy_of_all_tools = config.ALL_TOOLS.copy()
     for tool in copy_of_all_tools:
         # check that the tool is available in the path and executable
@@ -37,6 +37,8 @@ def check_available_tools(profile):
                 "We highly recommend to install the tool and restart the app."
             )
             config.ALL_TOOLS.remove(tool)
+
+    return True
 
 
 def read_profile(profile: str) -> dict:

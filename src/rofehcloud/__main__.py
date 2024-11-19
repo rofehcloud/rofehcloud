@@ -45,8 +45,8 @@ def text_based_interaction(profile: str, console: Console):
         return
     if (
         not check_available_tools(profile)
-        and not setup_services(profile_data)
-        and not verify_llm_functionality()
+        or not setup_services(profile_data)
+        or not verify_llm_functionality()
     ):
         exit(1)
 

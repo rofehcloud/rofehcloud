@@ -140,6 +140,8 @@ def verify_llm_functionality():
             return True
         else:
             raise Exception("LLM functionality verification failed.")
+            return False
+
     except Exception as e:
         log_message("ERROR", f"Error while verifying LLM functionality: {e}")
         return False
