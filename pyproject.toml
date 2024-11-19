@@ -3,16 +3,18 @@ requires = ["setuptools>=61.0", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 
+[tool.setuptools]
+include-package-data = true
+
+
 [project]
 name = "rofehcloud"
 dynamic = ["version", "readme", "dependencies"]
 authors = [
   { name="Team", email="team@rofehcloud.com" }, # The main contact
-  { name="Victor Gartvich", email="vg@rofehcloud.com" },
-  { name="Andre Buryndin", email="ab@rofehcloud.com" },
 ]
 description = "AI-powered CLI tool for automatic troubleshooting of complex systems based on Kubernetes, public and private clouds like AWS, Google Cloud (GCP), Azure, OpenStack, etc"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = {text = "Mozilla Public License 2.0 (MPL 2.0)"}
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -33,10 +35,14 @@ rofeh = "rofehcloud.__main__:main"
 
 [tool.setuptools.dynamic]
 version = {file = "src/rofehcloud/__version__"}
-readme = {file = ["README.md"]}
+readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements.txt"]}
 
 
 [tool.setuptools.packages.find]
 where = ["src"]
 namespaces = false
+
+
+[tool.setuptools.package-data]
+"*" = ["media/*.png"]

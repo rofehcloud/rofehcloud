@@ -43,9 +43,12 @@ def text_based_interaction(profile: str, console: Console):
     if profile_data is None:
         print(f"Profile {profile} not found.")
         return
-    check_available_tools(profile)
-    setup_services(profile_data)
-    verify_llm_functionality()
+    if (
+        not check_available_tools(profile)
+        and not setup_services(profile_data)
+        and not verify_llm_functionality()
+    ):
+        exit(1)
 
     while True:
         choice = questionary.select(

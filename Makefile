@@ -7,8 +7,13 @@ venv:
 install:
 	pip install -r requirements.txt
 
-
 check:
 	pre-commit run --all-files
 	# -black .
 	# -ruff .
+
+build:
+	python3 -m build
+
+upload:
+	python3 -m twine upload  dist/* --verbose
