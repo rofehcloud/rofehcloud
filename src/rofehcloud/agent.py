@@ -281,7 +281,7 @@ def setup_services(profile_data: dict):
             )
             aws_regions = None
             if (
-                profile_data["aws_regions_with_resources"]
+                "aws_regions_with_resources" in profile_data
                 and len(profile_data["aws_regions_with_resources"]) > 0
             ):
                 aws_regions = profile_data["aws_regions_with_resources"]
