@@ -459,9 +459,12 @@ def setup_services(profile_data: dict):
             f"Client initialization was successful (elapsed time: {str(elapsed_time)} seconds)",
         )
 
+        return True
+
     except Exception as e:
         log_message("ERROR", f"Client initialization failed: {str(e)}")
         raise e
+        return False
 
 
 def agent_chat(user_input, conversation_history):
