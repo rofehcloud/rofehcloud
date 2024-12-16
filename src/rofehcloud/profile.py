@@ -43,7 +43,7 @@ def check_available_tools(profile):
 
 def read_profile(profile: str) -> dict:
     profile_file = f"{config.PROFILES_DIR}/{profile}.yaml"
-    log_message("DEBUG", f"Reading profile from {profile_file}")
+    log_message("INFO", f"Reading profile from file {profile_file}")
     if not os.path.exists(profile_file):
         log_message("ERROR", f"Profile file {profile_file} not found")
         return None
@@ -88,6 +88,18 @@ def validate_profile(profile_data: str) -> bool:
             "type": "list",
             "required": False,
             "schema": {"type": "string"},
+        },
+        "additional_tools": {
+            "type": "list",
+            "required": False,
+            "schema": {
+                "type": "dict",
+                "schema": {
+                    "cli_command": {"type": "string", "required": True},
+                    "tool_usage_instructions": {"type": "string", "required": True},
+                    "additional_arguments": {"type": "string", "required": False},
+                },
+            },
         },
         "source_code_repositories": {
             "type": "list",

@@ -39,7 +39,7 @@ RofehCloud does not require any additional components to be installed in the tro
 
 Some examples of queries/issues RofehCloud can handle:
 - “Connection timeout” error when trying to communicate from EC2 instance i-0cdac72c5578a17db (located in ap-northeast-1 region) to RDS instance test2-warehouse located in us-east-2 region.
-- On EC2 instance  i-0991c22729522ca46 (located in ap-northeast-1 region) I’m getting an error “Access denied” when trying to read objects from S3 bucket “exchange-updates”.
+- On EC2 instance i-0991c22729522ca46 (located in ap-northeast-1 region) I’m getting an error “Access denied” when trying to read objects from S3 bucket “exchange-updates”.
 - Investigate unhealthy targets in AWS load balancer capture-test2-backend-lb located in us-east-2 region.
 - In what AWS regions do we have running EC2 instances?
 - Do we have any unused EBS volumes?
@@ -201,6 +201,21 @@ Yes, just add the names of relevant CLI tools to environment variable ADDITIONAL
 ```
 ADDITIONAL_TOOLS=esxcli,ncli
 ```
+
+### Using ADDITIONAL_TOOLS variable I'm adding required tools, but how can I configure specific instructions for each tool I add?
+
+In the default profile file (`~/.rofehcloud/profiles/default.yaml`) add new optional section `additional_tools` using the following example:
+
+```yaml
+additional_tools:
+- cli_command: "esxcli"
+  tool_usage_instructions: "Can be used to get the current state of VMware ESXi resources using 'esxcli' command. "
+- cli_command: "ncli"
+  tool_usage_instructions: "Can be used to get the current state of Nutanix resources using 'ncli' command. "
+- cli_command: "dog"
+  tool_usage_instructions: "Can be used to access Datadog resources using CLI command 'dog'."
+```
+
 
 ### Can RofehCloud send LLM call traces to LangSmith service?
 Yes, this is possible. Please use the following procedure:
