@@ -43,7 +43,13 @@ def initialize_environment():
         default_profile = f"{config.PROFILES_DIR}/default.yaml"
 
         if not os.path.exists(default_profile):
-            profile = {"name": "default", "description": "Default profile"}
+            profile = {
+                "name": "default",
+                "description": "Default profile",
+                "default_tools": [
+                    {"cli_command": "aws", "agent_description": "List EC2 instances"}
+                ],
+            }
             result = save_data(default_profile, profile)
             if not result:
                 log_message("ERROR", "Failed to save the default profile")
