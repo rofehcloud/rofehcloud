@@ -74,7 +74,7 @@ Software:
 RofehCloud can work with one of the following LLM services:
 - OpenAI Enterprise API (default LLM):
    - Configure the API key in environment variable OPENAI_API_KEY
-   - Recommended (default) OpenAI models are gpt-4o and gpt-4o-mini
+   - Recommended (default) OpenAI models are gpt-4o and gpt-4o-mini (managed by environment variables OPENAI_LANGCHAIN_AGENT_MODEL_ID and OPENAI_GENERAL_MODEL_ID)
 - Azure OpenAI service:
    - Set environment variable LLM_TO_USE to "azure-openai"
    - Configure the OpenAI API key in variable AZURE_OPENAI_API_KEY, Deployment ID in variable AZURE_OPENAI_DEPLOYMENT_ID, and deployment endpoint URL in variable AZURE_OPENAI_ENDPOINT. For example:
