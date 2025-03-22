@@ -28,6 +28,7 @@ from rofehcloud.constants import (
     agent_prompt_with_history,
     data_modification_command_denied,
     truncated_message,
+    response_format_instruction,
 )
 from rofehcloud.llm import call_llm
 
@@ -241,8 +242,8 @@ def setup_services(profile_data: dict):
             llm_langchain = OllamaLLM(
                 base_url=config.OLLAMA_ENDPOINT_URL,
                 model=config.OLLAMA_MODEL_ID,
-                temperature=0.3,
-                max_tokens=4096,
+                temperature=config.OLLAMA_TEMPERATURE,
+                max_tokens=config.OLLAMA_MAX_TOKENS,
                 disable_streaming=True,
             )
         else:
@@ -273,7 +274,9 @@ def setup_services(profile_data: dict):
 
         cli_tool_description = (
             f"Run a shell command on this machine (OS {platform.system()} {platform.version()}). "
-            "macOS/Darwin does not support -d flag for 'date' command. "
+            "Keep in mind the platform specific command syntax, e.g. macOS/Darwin does not support "
+            "-d flag for 'date' command. In addition to the common platform commands, you can use "
+            "the folowing tools/commands:"
         )
 
         if "aws" in config.ALL_TOOLS:
@@ -287,11 +290,9 @@ def setup_services(profile_data: dict):
                 aws_region = "us-east-1"
 
             cli_tool_description += (
-                "Can be used to get the current state of AWS "
-                "resources using 'aws' commands. "
-                "When requesting "
+                "\n* 'aws' for getting the current state of AWS resources. When requesting "
                 "AWS CloudWatch metrics, pull the data for no more the past 7 days. "
-                f"The default AWS region is {aws_region}. "
+                f"The default AWS region is {aws_region}."
             )
             aws_regions = None
             if (
@@ -306,8 +307,7 @@ def setup_services(profile_data: dict):
             tool_names.append("gcloud")
 
             cli_tool_description += (
-                "Can be used to get the current state of Google Cloud (GCP) "
-                "resources using 'gcloud' commands. "
+                "\n* 'gcloud' for getting the current state of Google Cloud (GCP) resources."
             )
 
         if "kubectl" in config.ALL_TOOLS:
@@ -315,9 +315,9 @@ def setup_services(profile_data: dict):
             tool_names.append("kubectl")
 
             cli_tool_description += (
-                "Can be used to get the current state of Kubernetes "
-                "resources using 'kubectl' commands. "
-                "When requesting K8s resources, pull the data for no more the past 7 days. "
+                "\n* 'kubectl' for getting the current state of Kubernetes resources. "
+                "The existing kubeconfig can be configured with multiple contexts. "
+                "When requesting K8s resources, pull the data for no more the past 7 days."
             )
 
         if "az" in config.ALL_TOOLS:
@@ -325,8 +325,8 @@ def setup_services(profile_data: dict):
             tool_names.append("az")
 
             cli_tool_description += (
-                "Can be used to get the current state of Azure "
-                "resources using 'az' commands. "
+                "\n* 'az' for getting the current state of Azure resources. "
+                "Prefer using table format (\"--output table\" argument)."
             )
 
         if (
@@ -343,13 +343,13 @@ def setup_services(profile_data: dict):
                         "INFO", f"Adding additional details for tool: {tool_name}"
                     )
                     tool_names.append(tool_name)
-                    cli_tool_description += f" {tool_description}. "
+                    cli_tool_description += f"\n* '{tool_name}' {tool_description}."
 
         if len(tool_names) == 0:
             raise ValueError("No public cloud or K8s tools are available to work with.")
 
         cli_tool_description += (
-            f"Other supported commands are {config.ALL_TOOLS}. "
+            f"\n\nOther supported commands are {config.ALL_TOOLS}. "
             "The tool accepts one argument - the command to run "
             "(no comments, no redirects). "
             "In general, try to limit the "
@@ -455,9 +455,9 @@ def setup_services(profile_data: dict):
             verbose=True,
             max_iterations=config.AGENT_MAX_ITERATIONS,
             handle_parsing_errors=(
-                "Check you output and make sure it conforms! Do not output an action and a final "
-                "answer at the same time."
+                f"Check your output and make sure it conforms!\n\n{response_format_instruction}"
             ),
+
         )
 
         agent_with_chat_history = RunnableWithMessageHistory(

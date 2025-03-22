@@ -88,6 +88,8 @@ class Config:
         "OLLAMA_ENDPOINT_URL", "http://localhost:11434"
     )
     OLLAMA_MODEL_ID = os.environ.get("OLLAMA_MODEL_ID", "llama3.2")
+    OLLAMA_MAX_TOKENS = int(os.environ.get("OLLAMA_MAX_TOKENS", "4096"))
+    OLLAMA_TEMPERATURE = float(os.environ.get("OLLAMA_TEMPERATURE", "0.3"))
 
     LLM_TO_USE = os.environ.get("LLM_TO_USE", "openai")
 

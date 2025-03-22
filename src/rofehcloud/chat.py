@@ -61,11 +61,14 @@ def load_data(filename):
         return None
 
 
-def save_data(filename, data):
+def save_data(filename, data, plain=False):
     log_message("DEBUG", f"Saving data to {filename}")
     try:
         with open(filename, "w") as file:
-            yaml.safe_dump(data, file, sort_keys=False)
+            if plain:
+                file.write(data)
+            else:
+                yaml.safe_dump(data, file, sort_keys=False)
         return True
 
     except Exception as e:
