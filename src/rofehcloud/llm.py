@@ -5,6 +5,7 @@ import json
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
+from ollama import Client
 
 from rofehcloud.config import Config as config
 from rofehcloud.logger import log_message
@@ -23,6 +24,8 @@ def call_llm(prompt, llm):
         return call_bedrock_llm(prompt, config.BEDROCK_GENERAL_MODEL_ID)
     elif llm == "azure-openai":
         return call_azure_openai_llm(prompt, config.AZURE_OPENAI_MODEL_ID)
+    elif llm == "ollama":
+        return call_ollama(prompt, config.OLLAMA_MODEL_ID)
     else:
         log_message("ERROR", f"LLM {llm} not supported.")
         return False
@@ -69,6 +72,29 @@ def call_azure_openai_llm(prompt, model_id):
 
     except Exception as e:
         log_message("ERROR", f"Error while calling Azure OpenAI: {e}")
+        return False
+
+
+def call_ollama(prompt, model_id):
+    client = Client(
+        host=config.OLLAMA_ENDPOINT_URL,
+    )
+    try:
+        response_from_ollama = client.chat(
+            model=config.OLLAMA_MODEL_ID,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            stream=False,
+        )
+        response = response_from_ollama.message.content
+        log_message("DEBUG", f"Response from Ollama: {response}")
+        return response
+    except Exception as e:
+        log_message("ERROR", f"Error while calling Ollama: {e}")
         return False
 
 
@@ -132,7 +158,7 @@ def verify_llm_functionality():
             log_message("INFO", "Skipping LLM functionality verification.")
             return True
 
-        log_message("DEBUG", f"Verifying LLM functionality ({config.LLM_TO_USE})...")
+        log_message("INFO", f"Verifying LLM functionality ({config.LLM_TO_USE})...")
         response = call_llm("Hello, world!", config.LLM_TO_USE)
 
         if isinstance(response, str) and len(response) > 0:

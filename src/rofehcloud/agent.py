@@ -17,7 +17,7 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_aws import ChatBedrock
 from langchain_openai import ChatOpenAI as OpenAILangChain
 from langchain_openai import AzureChatOpenAI
-
+from langchain_ollama import OllamaLLM
 
 from rofehcloud.config import Config as config
 from rofehcloud.logger import log_message
@@ -231,6 +231,20 @@ def setup_services(profile_data: dict):
                 timeout=240,
                 max_retries=2,
             )
+        elif config.LLM_TO_USE == "ollama":
+            log_message(
+                "INFO",
+                f"Using Ollama LLM, model ID for the agent: {config.OLLAMA_MODEL_ID}"
+                f" with endpoint URL: {config.OLLAMA_ENDPOINT_URL}",
+            )
+
+            llm_langchain = OllamaLLM(
+                base_url=config.OLLAMA_ENDPOINT_URL,
+                model=config.OLLAMA_MODEL_ID,
+                temperature=0.3,
+                max_tokens=4096,
+                disable_streaming=True,
+            )
         else:
             raise ValueError(f"LLM {config.LLM_TO_USE} is not supported.")
 
@@ -246,14 +260,14 @@ def setup_services(profile_data: dict):
                         "Call the tool if you need to get the current date and time in UTC."
                     ),
                 ),
-                Tool.from_function(
-                    func=before_generating_the_final_answer,
-                    name="Before final answer",
-                    description=(
-                        "Call the tool right before generating the final answer to the original user "
-                        "question. Specify 'N/A' as the action input for the tool."
-                    ),
-                ),
+                # Tool.from_function(
+                #    func=before_generating_the_final_answer,
+                #    name="Before final answer",
+                #    description=(
+                #        "Call the tool right before generating the final answer to the original user "
+                #        "question. Specify 'N/A' as the action input for the tool."
+                #    ),
+                # ),
             ]
         )
 
@@ -354,12 +368,12 @@ def setup_services(profile_data: dict):
             )
         )
 
-        def return_description_for_repo_tool(repo_name, repo_description):
+        def return_description_for_repo_tool(repo_name, repo_description, repo_type):
             return (
                 f"Useful to run shell commands like {config.ALL_TOOLS} "
                 "on source code repository named "
                 f"'{repo_name}'. "
-                f"Short repository description: {repo_description}. "
+                f"Short repository description: {repo_description}. The repository type is {repo_type}. "
                 "The shell accepts one parameter - the shell command to run (no comments, "
                 "no redirects). Using 'grep' or 'tail' commands limit the output to 400 lines max. "
                 "Do not prefix file names with the repository name, just use the file name. "
@@ -389,9 +403,11 @@ def setup_services(profile_data: dict):
                 repo_name = repo["name"]
                 repo_description = repo["description"]
                 repo_directory = repo["local_directory"]
+                repo_type = repo["type"]
                 log_message(
                     "INFO",
-                    f"Adding source code tool for repo {repo_name}, local directory: {repo_directory}",
+                    f"Adding source code tool for repo {repo_name}, "
+                    f"local directory: {repo_directory}, type: {repo_type}",
                 )
                 tool_names.append(f"repo {repo_name}")
 
@@ -403,7 +419,7 @@ def setup_services(profile_data: dict):
                         func=git_command_wrappers[repo_name],
                         name=f"Run a command in repository '{repo_name}'",
                         description=return_description_for_repo_tool(
-                            repo_name, repo_description
+                            repo_name, repo_description, repo_type
                         ),
                     ),
                 )

@@ -84,6 +84,11 @@ class Config:
         os.environ.get("COMMAND_OUTPUT_MAX_LENGTH_CHARS", 10000)
     )
 
+    OLLAMA_ENDPOINT_URL = os.environ.get(
+        "OLLAMA_ENDPOINT_URL", "http://localhost:11434"
+    )
+    OLLAMA_MODEL_ID = os.environ.get("OLLAMA_MODEL_ID", "llama3.2")
+
     LLM_TO_USE = os.environ.get("LLM_TO_USE", "openai")
 
     ALLOW_POTENTIALLY_RISKY_LLM_COMMANDS = os.environ.get(
@@ -130,10 +135,10 @@ class Config:
 
         required_vars = []
 
-        if self.LLM_TO_USE not in ["openai", "azure-openai", "bedrock"]:
+        if self.LLM_TO_USE not in ["openai", "azure-openai", "bedrock", "ollama"]:
             print(
                 f"ERROR: Invalid value for LLM_TO_USE: {self.LLM_TO_USE}. Must be one "
-                "of 'openai', 'azure-openai', or 'bedrock'."
+                "of 'openai', 'azure-openai', 'ollama', or 'bedrock'."
             )
             exit(1)
 
