@@ -84,6 +84,19 @@ class Config:
         os.environ.get("COMMAND_OUTPUT_MAX_LENGTH_CHARS", 10000)
     )
 
+    OLLAMA_ENDPOINT_URL = os.environ.get(
+        "OLLAMA_ENDPOINT_URL", "http://localhost:11434"
+    )
+    OLLAMA_MODEL_ID = os.environ.get("OLLAMA_MODEL_ID", "llama3.2")
+    OLLAMA_MAX_TOKENS = int(os.environ.get("OLLAMA_MAX_TOKENS", "4096"))
+    OLLAMA_TEMPERATURE = float(os.environ.get("OLLAMA_TEMPERATURE", "0.3"))
+
+    # Gemini-related settings
+    GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+    GEMINI_MODEL_ID = os.environ.get("GEMINI_MODEL_ID", "gemini-2.0-flash")
+    GEMINI_TEMPERATURE = float(os.environ.get("GEMINI_TEMPERATURE", 0.3))
+    GEMINI_MAX_OUTPUT_TOKENS = int(os.environ.get("GEMINI_MAX_OUTPUT_TOKENS", 4096))
+
     LLM_TO_USE = os.environ.get("LLM_TO_USE", "openai")
 
     ALLOW_POTENTIALLY_RISKY_LLM_COMMANDS = os.environ.get(
@@ -130,10 +143,16 @@ class Config:
 
         required_vars = []
 
-        if self.LLM_TO_USE not in ["openai", "azure-openai", "bedrock"]:
+        if self.LLM_TO_USE not in [
+            "openai",
+            "azure-openai",
+            "bedrock",
+            "ollama",
+            "gemini",
+        ]:
             print(
                 f"ERROR: Invalid value for LLM_TO_USE: {self.LLM_TO_USE}. Must be one "
-                "of 'openai', 'azure-openai', or 'bedrock'."
+                "of 'openai', 'azure-openai', 'ollama', or 'bedrock'."
             )
             exit(1)
 
@@ -149,6 +168,10 @@ class Config:
                 "AZURE_OPENAI_DEPLOYMENT_ID",
                 "AZURE_OPENAI_ENDPOINT",
             ]
+
+        # Add Gemini validation
+        if self.LLM_TO_USE == "gemini":
+            required_vars.append("GOOGLE_API_KEY")
 
         missing_vars = [var for var in required_vars if not os.environ.get(var)]
         if missing_vars:

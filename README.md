@@ -89,6 +89,14 @@ RofehCloud can work with one of the following LLM services:
    - Set environment variable LLM_TO_USE to "bedrock"
    - If the AWS Bedrock service is accessible using a non-default AWS profile, then set the profile name in environment variable BEDROCK_PROFILE_NAME and AWS Bedrock region code name (like "us-west-2") in variable BEDROCK_AWS_REGION
    - By default RofehCloud uses Anthropic models Claude 3.5 Sonnet and Claude 3 Haiku
+- Google AI chat models:
+   - Set environment variable LLM_TO_USE to "gemini"
+   - Set GOOGLE_API_KEY to the value of your Google API key
+   - Set GEMINI_MODEL_ID to the ID of the Google model you want to use (the default value is "gemini-2.0-flash")
+- Any self-hosted LLM model managed by a locally-running Ollama service:
+   - Set environment variable LLM_TO_USE to "ollama"
+   - Configure the Ollama API URL (default value "http://localhost:11434") in environment variable OLLAMA_ENDPOINT_URL
+   - Configure the used Ollama model in environment variable OLLAMA_MODEL_ID (the default value is "llama3.2")
 
 To get started with RofehCloud, follow these steps (macOs environment):
 

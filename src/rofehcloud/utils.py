@@ -3,6 +3,7 @@ import os
 from rofehcloud.logger import log_message
 from rofehcloud.config import Config as config
 from rofehcloud.chat import save_data
+from rofehcloud.constants import default_profile_data
 
 
 def generate_collection_name(profile: str) -> str:
@@ -43,14 +44,7 @@ def initialize_environment():
         default_profile = f"{config.PROFILES_DIR}/default.yaml"
 
         if not os.path.exists(default_profile):
-            profile = {
-                "name": "default",
-                "description": "Default profile",
-                "default_tools": [
-                    {"cli_command": "aws", "agent_description": "List EC2 instances"}
-                ],
-            }
-            result = save_data(default_profile, profile)
+            result = save_data(default_profile, default_profile_data, plain=True)
             if not result:
                 log_message("ERROR", "Failed to save the default profile")
                 return False

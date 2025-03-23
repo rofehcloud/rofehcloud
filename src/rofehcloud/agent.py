@@ -17,7 +17,8 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_aws import ChatBedrock
 from langchain_openai import ChatOpenAI as OpenAILangChain
 from langchain_openai import AzureChatOpenAI
-
+from langchain_ollama import OllamaLLM
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from rofehcloud.config import Config as config
 from rofehcloud.logger import log_message
@@ -28,6 +29,7 @@ from rofehcloud.constants import (
     agent_prompt_with_history,
     data_modification_command_denied,
     truncated_message,
+    response_format_instruction,
 )
 from rofehcloud.llm import call_llm
 
@@ -55,9 +57,10 @@ def check_that_command_is_safe(command):
     prompt = (
         "Review the following command and reply with Yes if the command is making any "
         "changes to the system. Reply with No if the command is not making any changes and is safe to"
-        f"execute. Do not add any comments. Command to review: \n\n{command}"
+        f"execute. Do not add any comments. You must reply with either Yes or No. Command to review: \n\n{command}"
     )
     response = call_llm(prompt, config.LLM_TO_USE)
+    log_message("DEBUG", f"Response to the command validation prompt: {response}")
 
     if response is None or response == "":
         log_message(
@@ -231,6 +234,27 @@ def setup_services(profile_data: dict):
                 timeout=240,
                 max_retries=2,
             )
+        elif config.LLM_TO_USE == "ollama":
+            log_message(
+                "INFO",
+                f"Using Ollama LLM, model ID for the agent: {config.OLLAMA_MODEL_ID}"
+                f" with endpoint URL: {config.OLLAMA_ENDPOINT_URL}",
+            )
+
+            llm_langchain = OllamaLLM(
+                base_url=config.OLLAMA_ENDPOINT_URL,
+                model=config.OLLAMA_MODEL_ID,
+                temperature=config.OLLAMA_TEMPERATURE,
+                max_tokens=config.OLLAMA_MAX_TOKENS,
+                disable_streaming=True,
+            )
+        elif config.LLM_TO_USE == "gemini":
+            llm_langchain = ChatGoogleGenerativeAI(
+                model=config.GEMINI_MODEL_ID,
+                temperature=config.GEMINI_TEMPERATURE,
+                max_tokens=config.GEMINI_MAX_OUTPUT_TOKENS,
+                api_key=config.GOOGLE_API_KEY,
+            )
         else:
             raise ValueError(f"LLM {config.LLM_TO_USE} is not supported.")
 
@@ -246,20 +270,22 @@ def setup_services(profile_data: dict):
                         "Call the tool if you need to get the current date and time in UTC."
                     ),
                 ),
-                Tool.from_function(
-                    func=before_generating_the_final_answer,
-                    name="Before final answer",
-                    description=(
-                        "Call the tool right before generating the final answer to the original user "
-                        "question. Specify 'N/A' as the action input for the tool."
-                    ),
-                ),
+                # Tool.from_function(
+                #    func=before_generating_the_final_answer,
+                #    name="Before final answer",
+                #    description=(
+                #        "Call the tool right before generating the final answer to the original user "
+                #        "question. Specify 'N/A' as the action input for the tool."
+                #    ),
+                # ),
             ]
         )
 
         cli_tool_description = (
             f"Run a shell command on this machine (OS {platform.system()} {platform.version()}). "
-            "macOS/Darwin does not support -d flag for 'date' command. "
+            "Keep in mind the platform specific command syntax, e.g. macOS/Darwin does not support "
+            "-d flag for 'date' command. In addition to the common platform commands, you can use "
+            "the folowing tools/commands:"
         )
 
         if "aws" in config.ALL_TOOLS:
@@ -273,11 +299,9 @@ def setup_services(profile_data: dict):
                 aws_region = "us-east-1"
 
             cli_tool_description += (
-                "Can be used to get the current state of AWS "
-                "resources using 'aws' commands. "
-                "When requesting "
+                "\n* 'aws' for getting the current state of AWS resources. When requesting "
                 "AWS CloudWatch metrics, pull the data for no more the past 7 days. "
-                f"The default AWS region is {aws_region}. "
+                f"The default AWS region is {aws_region}."
             )
             aws_regions = None
             if (
@@ -291,19 +315,16 @@ def setup_services(profile_data: dict):
             log_message("DEBUG", "Adding gcloud CLI tool...")
             tool_names.append("gcloud")
 
-            cli_tool_description += (
-                "Can be used to get the current state of Google Cloud (GCP) "
-                "resources using 'gcloud' commands. "
-            )
+            cli_tool_description += "\n* 'gcloud' for getting the current state of Google Cloud (GCP) resources."
 
         if "kubectl" in config.ALL_TOOLS:
             log_message("DEBUG", "Adding kubectl CLI tool...")
             tool_names.append("kubectl")
 
             cli_tool_description += (
-                "Can be used to get the current state of Kubernetes "
-                "resources using 'kubectl' commands. "
-                "When requesting K8s resources, pull the data for no more the past 7 days. "
+                "\n* 'kubectl' for getting the current state of Kubernetes resources. "
+                "The existing kubeconfig can be configured with multiple contexts. "
+                "When requesting K8s resources, pull the data for no more the past 7 days."
             )
 
         if "az" in config.ALL_TOOLS:
@@ -311,8 +332,8 @@ def setup_services(profile_data: dict):
             tool_names.append("az")
 
             cli_tool_description += (
-                "Can be used to get the current state of Azure "
-                "resources using 'az' commands. "
+                "\n* 'az' for getting the current state of Azure resources. "
+                'Prefer using table format ("--output table" argument).'
             )
 
         if (
@@ -329,13 +350,13 @@ def setup_services(profile_data: dict):
                         "INFO", f"Adding additional details for tool: {tool_name}"
                     )
                     tool_names.append(tool_name)
-                    cli_tool_description += f" {tool_description}. "
+                    cli_tool_description += f"\n* '{tool_name}' {tool_description}."
 
         if len(tool_names) == 0:
             raise ValueError("No public cloud or K8s tools are available to work with.")
 
         cli_tool_description += (
-            f"Other supported commands are {config.ALL_TOOLS}. "
+            f"\n\nOther supported commands are {config.ALL_TOOLS}. "
             "The tool accepts one argument - the command to run "
             "(no comments, no redirects). "
             "In general, try to limit the "
@@ -354,12 +375,12 @@ def setup_services(profile_data: dict):
             )
         )
 
-        def return_description_for_repo_tool(repo_name, repo_description):
+        def return_description_for_repo_tool(repo_name, repo_description, repo_type):
             return (
                 f"Useful to run shell commands like {config.ALL_TOOLS} "
                 "on source code repository named "
                 f"'{repo_name}'. "
-                f"Short repository description: {repo_description}. "
+                f"Short repository description: {repo_description}. The repository type is {repo_type}. "
                 "The shell accepts one parameter - the shell command to run (no comments, "
                 "no redirects). Using 'grep' or 'tail' commands limit the output to 400 lines max. "
                 "Do not prefix file names with the repository name, just use the file name. "
@@ -389,9 +410,11 @@ def setup_services(profile_data: dict):
                 repo_name = repo["name"]
                 repo_description = repo["description"]
                 repo_directory = repo["local_directory"]
+                repo_type = repo["type"]
                 log_message(
                     "INFO",
-                    f"Adding source code tool for repo {repo_name}, local directory: {repo_directory}",
+                    f"Adding source code tool for repo {repo_name}, "
+                    f"local directory: {repo_directory}, type: {repo_type}",
                 )
                 tool_names.append(f"repo {repo_name}")
 
@@ -403,7 +426,7 @@ def setup_services(profile_data: dict):
                         func=git_command_wrappers[repo_name],
                         name=f"Run a command in repository '{repo_name}'",
                         description=return_description_for_repo_tool(
-                            repo_name, repo_description
+                            repo_name, repo_description, repo_type
                         ),
                     ),
                 )
@@ -439,8 +462,7 @@ def setup_services(profile_data: dict):
             verbose=True,
             max_iterations=config.AGENT_MAX_ITERATIONS,
             handle_parsing_errors=(
-                "Check you output and make sure it conforms! Do not output an action and a final "
-                "answer at the same time."
+                f"Check your output and make sure it conforms!\n\n{response_format_instruction}"
             ),
         )
 
