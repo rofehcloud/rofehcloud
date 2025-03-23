@@ -2,7 +2,7 @@ error_response = "It looks like we hit a snag. Please check your profile configu
 
 truncated_message = "(truncated)"
 
-response_format_instruction = f"""
+response_format_instruction = """
 Use the following format:
 
 Question: the input question you must answer

@@ -6,6 +6,7 @@ import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from ollama import Client
+from google import genai
 
 from rofehcloud.config import Config as config
 from rofehcloud.logger import log_message
@@ -26,6 +27,8 @@ def call_llm(prompt, llm):
         return call_azure_openai_llm(prompt, config.AZURE_OPENAI_MODEL_ID)
     elif llm == "ollama":
         return call_ollama(prompt, config.OLLAMA_MODEL_ID)
+    elif llm == "gemini":
+        return call_gemini(prompt, config.GEMINI_MODEL_ID)
     else:
         log_message("ERROR", f"LLM {llm} not supported.")
         return False
@@ -95,6 +98,30 @@ def call_ollama(prompt, model_id):
         return response
     except Exception as e:
         log_message("ERROR", f"Error while calling Ollama: {e}")
+        return False
+
+
+def call_gemini(prompt, model_id):
+    try:
+        client = genai.Client(
+            # vertexai=True,
+            api_key=config.GOOGLE_API_KEY,
+            # http_options=types.HttpOptions(api_version='v1')
+        )
+
+        tokens = count_tokens(prompt)
+        log_message("DEBUG", f"Calling Gemini ({tokens} tokens in the prompt)...")
+
+        response = client.models.generate_content(
+            model=config.GEMINI_MODEL_ID, contents=prompt
+        )
+        if response.text:
+            log_message("DEBUG", f"Response from Gemini: {response.text}")
+            return response.text
+        return False
+
+    except Exception as e:
+        log_message("ERROR", f"Error while calling Gemini: {e}")
         return False
 
 

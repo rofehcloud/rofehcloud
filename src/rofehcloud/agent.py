@@ -18,6 +18,7 @@ from langchain_aws import ChatBedrock
 from langchain_openai import ChatOpenAI as OpenAILangChain
 from langchain_openai import AzureChatOpenAI
 from langchain_ollama import OllamaLLM
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from rofehcloud.config import Config as config
 from rofehcloud.logger import log_message
@@ -56,9 +57,10 @@ def check_that_command_is_safe(command):
     prompt = (
         "Review the following command and reply with Yes if the command is making any "
         "changes to the system. Reply with No if the command is not making any changes and is safe to"
-        f"execute. Do not add any comments. Command to review: \n\n{command}"
+        f"execute. Do not add any comments. You must reply with either Yes or No. Command to review: \n\n{command}"
     )
     response = call_llm(prompt, config.LLM_TO_USE)
+    log_message("DEBUG", f"Response to the command validation prompt: {response}")
 
     if response is None or response == "":
         log_message(
@@ -246,6 +248,13 @@ def setup_services(profile_data: dict):
                 max_tokens=config.OLLAMA_MAX_TOKENS,
                 disable_streaming=True,
             )
+        elif config.LLM_TO_USE == "gemini":
+            llm_langchain = ChatGoogleGenerativeAI(
+                model=config.GEMINI_MODEL_ID,
+                temperature=config.GEMINI_TEMPERATURE,
+                max_tokens=config.GEMINI_MAX_OUTPUT_TOKENS,
+                api_key=config.GOOGLE_API_KEY,
+            )
         else:
             raise ValueError(f"LLM {config.LLM_TO_USE} is not supported.")
 
@@ -306,9 +315,7 @@ def setup_services(profile_data: dict):
             log_message("DEBUG", "Adding gcloud CLI tool...")
             tool_names.append("gcloud")
 
-            cli_tool_description += (
-                "\n* 'gcloud' for getting the current state of Google Cloud (GCP) resources."
-            )
+            cli_tool_description += "\n* 'gcloud' for getting the current state of Google Cloud (GCP) resources."
 
         if "kubectl" in config.ALL_TOOLS:
             log_message("DEBUG", "Adding kubectl CLI tool...")
@@ -326,7 +333,7 @@ def setup_services(profile_data: dict):
 
             cli_tool_description += (
                 "\n* 'az' for getting the current state of Azure resources. "
-                "Prefer using table format (\"--output table\" argument)."
+                'Prefer using table format ("--output table" argument).'
             )
 
         if (
@@ -457,7 +464,6 @@ def setup_services(profile_data: dict):
             handle_parsing_errors=(
                 f"Check your output and make sure it conforms!\n\n{response_format_instruction}"
             ),
-
         )
 
         agent_with_chat_history = RunnableWithMessageHistory(

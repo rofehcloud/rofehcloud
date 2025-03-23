@@ -5,6 +5,7 @@ from rofehcloud.config import Config as config
 from rofehcloud.chat import save_data
 from rofehcloud.constants import default_profile_data
 
+
 def generate_collection_name(profile: str) -> str:
     collection_name = f"c_{profile}"
     return collection_name
