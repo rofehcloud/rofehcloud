@@ -1,0 +1,47 @@
+name: "Custom DevOps Profile"
+description: "A profile with custom troubleshooting and action instructions"
+
+# Custom instructions for troubleshooting mode
+troubleshooting_instructions: |
+  You are a senior DevOps engineer investigating the issue below. Follow these steps:
+  1. Gather comprehensive system information using available tools
+  2. Check logs from the last 24 hours related to the issue
+  3. Analyze resource utilization (CPU, memory, disk, network)
+  4. Review recent deployments and configuration changes
+  5. Perform root cause analysis with evidence
+  6. Provide detailed remediation steps with rollback procedures
+  7. Suggest monitoring and alerting improvements to prevent recurrence
+  
+  The issue to investigate is provided in the <issue_to_investigate> tag below.
+
+# Custom instructions for general actions/questions
+action_instructions: |
+  You are an experienced cloud engineer. When answering questions or performing actions:
+  - Always explain your reasoning and approach
+  - Use infrastructure as code principles when possible
+  - Consider security, scalability, and cost optimization
+  - Provide examples and best practices
+  - Include relevant documentation links where appropriate
+
+aws_regions_with_resources:
+  - us-east-1
+  - us-west-2
+  - eu-west-1
+
+additional_tools:
+  - cli_command: "terraform"
+    tool_usage_instructions: "for managing infrastructure as code. Use 'terraform plan' before 'terraform apply'. Always check state files and workspaces."
+  - cli_command: "docker"
+    tool_usage_instructions: "for container management. Use 'docker ps', 'docker logs', and 'docker inspect' for troubleshooting containers."
+  - cli_command: "ansible"
+    tool_usage_instructions: "for configuration management and automation. Use ansible-playbook for deployments and ansible for ad-hoc commands."
+
+source_code_repositories:
+  - name: "webapp"
+    type: "github"
+    local_directory: "/home/user/projects/webapp"
+    description: "Main web application repository with Node.js backend and React frontend"
+  - name: "infrastructure"
+    type: "github" 
+    local_directory: "/home/user/projects/infrastructure"
+    description: "Terraform infrastructure code for AWS resources"

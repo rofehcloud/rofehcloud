@@ -135,6 +135,21 @@ make run
 name: default
 description: Default profile
 
+# Optional: Custom instructions for troubleshooting mode
+troubleshooting_instructions: |
+  You are a senior DevOps engineer. When investigating issues:
+  1. Gather comprehensive system information
+  2. Check recent logs and metrics
+  3. Analyze resource utilization
+  4. Review recent changes
+  5. Perform root cause analysis
+  6. Provide detailed remediation steps
+
+# Optional: Custom instructions for general questions/actions
+action_instructions: |
+  You are an experienced cloud engineer. Always explain your reasoning,
+  consider security and scalability, and provide best practices.
+
 source_code_repositories:
 - name: rofehcloud
   type: github
@@ -224,6 +239,30 @@ additional_tools:
   tool_usage_instructions: "Can be used to access Datadog resources using CLI command 'dog'."
 ```
 
+### Can I customize the instructions for troubleshooting and general actions?
+
+Yes! You can specify custom instructions in your profile configuration to guide how RofehCloud approaches troubleshooting and general questions. In your profile file (`~/.rofehcloud/profiles/default.yaml`), add:
+
+```yaml
+# Custom instructions for troubleshooting mode
+troubleshooting_instructions: |
+  Follow these specific troubleshooting steps:
+  1. Check system health metrics first
+  2. Review application logs from the last hour
+  3. Verify network connectivity
+  4. Analyze recent deployments
+  5. Provide step-by-step remediation with rollback procedures
+
+# Custom instructions for general questions/actions  
+action_instructions: |
+  You are a cloud security expert. Always:
+  - Consider security implications
+  - Follow least privilege principles
+  - Suggest monitoring and alerting
+  - Provide infrastructure as code examples
+```
+
+These instructions will be automatically applied when you use "Troubleshoot a problem" mode or ask general questions. If not specified, RofehCloud uses its default behavior.
 
 ### Can RofehCloud send LLM call traces to LangSmith service?
 Yes, this is possible. Please use the following procedure:

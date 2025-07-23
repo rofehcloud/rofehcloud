@@ -408,7 +408,7 @@ def setup_services(profile_data: dict):
 
             for repo in profile_data["source_code_repositories"]:
                 repo_name = repo["name"]
-                repo_description = repo["description"]
+                repo_description = repo.get("description", f"Repository {repo_name}")
                 repo_directory = repo["local_directory"]
                 repo_type = repo["type"]
                 log_message(
