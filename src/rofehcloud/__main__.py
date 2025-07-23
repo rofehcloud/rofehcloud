@@ -24,7 +24,7 @@ from rofehcloud.chat import (
     get_conversations_list,
 )
 from rofehcloud.config import Config as config
-from rofehcloud.profile import check_available_tools, read_profile, save_profile
+from rofehcloud.profile import check_available_tools, read_profile, save_profile, check_and_generate_missing_repo_descriptions
 from rofehcloud.utils import initialize_environment
 from rofehcloud.llm import verify_llm_functionality
 from rofehcloud.aws import get_regions_with_resources
@@ -43,6 +43,17 @@ def text_based_interaction(profile: str, console: Console):
     if profile_data is None:
         print(f"Profile {profile} not found.")
         return
+    
+    # Check for missing repository descriptions and generate them if needed
+    repo_descriptions_updated = check_and_generate_missing_repo_descriptions(profile, profile_data)
+    
+    # If descriptions were updated, reload the profile
+    if repo_descriptions_updated:
+        profile_data = read_profile(profile)
+        if profile_data is None:
+            print(f"Error: Failed to reload profile {profile} after updating repository descriptions.")
+            return
+    
     if (
         not check_available_tools(profile)
         or not setup_services(profile_data)
@@ -163,19 +174,31 @@ def text_based_interaction(profile: str, console: Console):
                     current_time = datetime.now(local_tz)
                     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
 
-                    question_full = (
-                        "Using available tools, investigate the alert/issue provided below in XML tag "
-                        "<issue_to_investigate>. "
-                        "Review all reasonable scenarios "
-                        "why the problem could happen. Use available tooling to collect "
-                        "necessary debugging information. Perform Root Cause Analysis. "
-                        "Suggest remediation steps. "
-                        "Using bullet points, mention a summary of taken investigation steps. "
-                        f"The current GMT date/time is {formatted_time}.\n\n"
-                        f"<issue_to_investigate>{question}</issue_to_investigate>"
-                    )
+                    if "troubleshooting_instructions" in profile_data and profile_data["troubleshooting_instructions"]:
+                        custom_instructions = profile_data["troubleshooting_instructions"]
+                        question_full = (
+                            f"{custom_instructions} "
+                            f"The current GMT date/time is {formatted_time}.\n\n"
+                            f"<issue_to_investigate>{question}</issue_to_investigate>"
+                        )
+                    else:
+                        question_full = (
+                            "Using available tools, investigate the alert/issue provided below in XML tag "
+                            "<issue_to_investigate>. "
+                            "Review all reasonable scenarios "
+                            "why the problem could happen. Use available tooling to collect "
+                            "necessary debugging information. Perform Root Cause Analysis. "
+                            "Suggest remediation steps. "
+                            "Using bullet points, mention a summary of taken investigation steps. "
+                            f"The current GMT date/time is {formatted_time}.\n\n"
+                            f"<issue_to_investigate>{question}</issue_to_investigate>"
+                        )
                 else:
-                    question_full = question
+                    if not troubleshooting and "action_instructions" in profile_data and profile_data["action_instructions"]:
+                        custom_instructions = profile_data["action_instructions"]
+                        question_full = f"{custom_instructions}\n\n{question}"
+                    else:
+                        question_full = question
 
                 if first_question:
                     first_question = False
